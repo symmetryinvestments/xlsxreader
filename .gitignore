@@ -1,0 +1,15 @@
+.dub
+docs.json
+__dummy.html
+docs/
+/xlsxreader
+xlsxreader.so
+xlsxreader.dylib
+xlsxreader.dll
+xlsxreader.a
+xlsxreader.lib
+xlsxreader-test-*
+*.exe
+*.o
+*.obj
+*.lst
