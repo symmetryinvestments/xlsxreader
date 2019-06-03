@@ -1,6 +1,7 @@
 module xslxreader;
 
-import std.algorithm : filter, map, sort, all;
+import std.algorithm : filter, map, sort, all, joiner;
+import std.typecons : tuple;
 import std.ascii : isDigit;
 import std.array : array;
 import std.regex;
@@ -24,7 +25,7 @@ struct SheetNameId {
 
 private ZipArchive readFile(string filename) {
 	enforce(exists(filename), "File with name " ~ filename ~ " does not
-			exist");	
+			exist");
 
 	auto file = new ZipArchive(read(filename));
 	return file;
@@ -46,7 +47,7 @@ SheetNameId[] sheetNames(string filename) {
 	assert(!sheetsRng.empty);
 	return sheetsRng.front.children
 		.map!(s => SheetNameId(
-					s.attributes.filter!(a => a.name == "name").front.value, 
+					s.attributes.filter!(a => a.name == "name").front.value,
 					s.attributes.filter!(a => a.name == "sheetId").front
 						.value.to!int()
 				)
@@ -65,7 +66,7 @@ unittest {
 Sheet readSheet(string filename, string sheetName) {
 	SheetNameId[] sheets = sheetNames(filename);
 	auto sRng = sheets.filter!(s => s.name == sheetName);
-	enforce(!sRng.empty, "No sheet with name " ~ sheetName 
+	enforce(!sRng.empty, "No sheet with name " ~ sheetName
 			~ " found in file " ~ filename);
 	return readSheet(filename, sRng.front.id);
 }
@@ -133,6 +134,69 @@ Variant convert(string s) {
 	}
 }
 
+struct Cell {
+	string loc;
+	size_t row;
+	string t;
+	string v;
+}
+
+Cell[] readCells(ZipArchive za, ArchiveMember am) {
+	ubyte[] ss = za.expand(am);
+	string ssData = cast(string)ss;
+	auto dom = parseDOM(ssData);
+	assert(dom.children.length == 1);
+	auto ws = dom.children[0];
+	assert(ws.name == "worksheet");
+	auto sdRng = ws.children.filter!(c => c.name == "sheetData");
+	assert(!sdRng.empty);
+	auto tmp = sdRng.front.children
+		.filter!(r => r.name == "row")
+		.map!(row => row.children
+			.map!(rc => tuple(
+				row.attributes.filter!(rowA => rowA.name == "r").front.value
+					.to!long(),
+				row.children
+			))
+		)
+		.joiner
+		.map!(c => c[1].map!(v => tuple(
+					c[0],
+					v.attributes.filter!(cr => cr.name == "r").front.value,
+					v.attributes.filter!(cr => cr.name == "t").front.value,
+					v.children.filter!(i => i.name == "v")
+				)
+			)
+		)
+		.joiner
+		.map!(v => v[3].map!(vi => tuple(
+					v[0],
+					v[1],
+					v[2],
+					vi.children[0].text
+				)
+			)
+		)
+		.joiner
+		//.map!(t1 => tuple(
+		//		t1[0],
+		//		t1[1].attributes.filter!(ra => ra.name == "r").front.value,
+		//		t1[1]
+		//	)
+		//k)
+		//.map!(r => tuple(
+		//	r.attributes.filter!(ra => ra.name == "r").front.value.to!size_t(),
+		//	r)
+		//)
+		//.map!(rc => tuple(rc[0], rc[1].children
+		//			.filter!(c => c.name == "c").array)
+		//)
+		.array;
+	writefln("%(%s\n%)", tmp);
+	writeln(typeof(tmp).stringof);
+	return Cell[].init;
+}
+
 Sheet readSheet(string filename, int sheetId) {
 	auto file = readFile(filename);
 	auto ams = file.directory;
@@ -140,6 +204,12 @@ Sheet readSheet(string filename, int sheetId) {
 	enforce(ss in ams, "No sharedStrings found");
 	Variant[] sharedStrings = readSharedEntries(file, ams[ss]);
 	writeln(sharedStrings);
+
+	immutable wsStr = "xl/worksheets/sheet" ~ to!string(sheetId) ~ ".xml";
+	enforce(wsStr in ams, wsStr ~ " Not found in "
+			~ ams.keys().joiner(" ").to!string()
+		);
+	Cell[] cells = readCells(file, ams[wsStr]);
 	return Sheet.init;
 }
 
