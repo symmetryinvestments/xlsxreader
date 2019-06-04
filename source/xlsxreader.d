@@ -59,6 +59,25 @@ struct Sheet {
 			writeln();
 		}
 	}
+
+	Row!(T) iterateRow(T)(size_t row, size_t start, size_t end) {
+		return Row!(T)(row, start, end, start);
+	}
+}
+
+T convertTo(T)(Variant var) {
+	import std.traits : isIntegral, isFloatingPoint, isSomeString;
+	if(is(T == Variant)) {
+		return var;
+	} static if(isSomeString!T) {
+	}
+}
+
+struct Row(T) {
+	size_t row;
+	size_t start;
+	size_t end;
+	size_t cur;
 }
 
 private ZipArchive readFile(string filename) {
