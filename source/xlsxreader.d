@@ -1,26 +1,64 @@
 module xslxreader;
 
-import std.algorithm : filter, map, sort, all, joiner;
-import std.typecons : tuple;
-import std.ascii : isDigit;
+import std.algorithm : filter, map, sort, all, joiner, each;
 import std.array : array;
-import std.regex;
+import std.ascii : isDigit;
 import std.conv : to;
-import std.utf : byChar;
 import std.exception : enforce;
 import std.file : read, exists, readText;
+import std.format : format;
 import std.range : tee;
+import std.regex;
 import std.stdio;
+import std.typecons : tuple;
+import std.utf : byChar;
 import std.variant;
 import std.zip;
 
 import dxml.dom;
 
-alias Sheet = Variant[][];
+struct Pos {
+	// zero based
+	size_t row;
+	// zero based
+	size_t col;
+}
 
-struct SheetNameId {
-	string name;
-	int id;
+struct Cell {
+	string loc;
+	size_t row; // row[r]
+	string t; // s or n, s for pointer, n for value, stored in v
+	string r; // c[r]
+	string v; // c.v the value or ptr
+	string f; // c.f the formula
+	Variant value;
+	Pos position;
+}
+
+struct Sheet {
+	Cell[] cells;
+	Variant[][] table;
+	Pos maxPos;
+
+	void printTable() {
+		long[] maxCol = new long[](maxPos.col + 1);
+		foreach(row; this.table) {
+			foreach(idx, Variant col; row) {
+				string s = col.hasValue() ? col.toString() : "";
+				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
+			}
+		}
+		maxCol[] += 1;
+
+		foreach(row; this.table) {
+			foreach(idx, Variant col; row) {
+				writef("%*s, ", maxCol[idx], col.hasValue()
+						? col.toString()
+						: "");
+			}
+			writeln();
+		}
+	}
 }
 
 private ZipArchive readFile(string filename) {
@@ -29,6 +67,11 @@ private ZipArchive readFile(string filename) {
 
 	auto file = new ZipArchive(read(filename));
 	return file;
+}
+
+struct SheetNameId {
+	string name;
+	int id;
 }
 
 SheetNameId[] sheetNames(string filename) {
@@ -71,6 +114,33 @@ Sheet readSheet(string filename, string sheetName) {
 	return readSheet(filename, sRng.front.id);
 }
 
+Sheet readSheet(string filename, int sheetId) {
+	auto file = readFile(filename);
+	auto ams = file.directory;
+	immutable ss = "xl/sharedStrings.xml";
+	enforce(ss in ams, "No sharedStrings found");
+	Variant[] sharedStrings = readSharedEntries(file, ams[ss]);
+	writeln(sharedStrings);
+
+	immutable wsStr = "xl/worksheets/sheet" ~ to!string(sheetId) ~ ".xml";
+	enforce(wsStr in ams, wsStr ~ " Not found in "
+			~ ams.keys().joiner(" ").to!string()
+		);
+	Sheet ret;
+	ret.cells = insertValueIntoCell(readCells(file, ams[wsStr]), sharedStrings);
+	Pos maxPos;
+	foreach(ref c; ret.cells) {
+		c.position = toPos(c.r);
+		maxPos = elementMax(maxPos, c.position);
+	}
+	ret.maxPos = maxPos;
+	ret.table = new Variant[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
+	foreach(c; ret.cells) {
+		ret.table[c.position.row][c.position.col] = c.value;
+	}
+	return ret;
+}
+
 Variant[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	ubyte[] ss = za.expand(am);
 	string ssData = cast(string)ss;
@@ -93,7 +163,7 @@ bool canConvertToLong(string s) {
 }
 
 immutable rs = r"[0-9][0-9]*\.[0-9]*";
-auto rgx = regex(rs);
+auto rgx = ctRegex!rs;
 
 bool canConvertToDouble(string s) {
 	auto cap = matchAll(s, rgx);
@@ -134,13 +204,6 @@ Variant convert(string s) {
 	}
 }
 
-struct Cell {
-	string loc;
-	size_t row;
-	string t;
-	string v;
-}
-
 Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	ubyte[] ss = za.expand(am);
 	string ssData = cast(string)ss;
@@ -150,70 +213,80 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	assert(ws.name == "worksheet");
 	auto sdRng = ws.children.filter!(c => c.name == "sheetData");
 	assert(!sdRng.empty);
-	auto tmp = sdRng.front.children
-		.filter!(r => r.name == "row")
-		.map!(row => row.children
-			.map!(rc => tuple(
-				row.attributes.filter!(rowA => rowA.name == "r").front.value
-					.to!long(),
-				row.children
-			))
-		)
-		.joiner
-		.map!(c => c[1].map!(v => tuple(
-					c[0],
-					v.attributes.filter!(cr => cr.name == "r").front.value,
-					v.attributes.filter!(cr => cr.name == "t").front.value,
-					v.children.filter!(i => i.name == "v")
-				)
-			)
-		)
-		.joiner
-		.map!(v => v[3].map!(vi => tuple(
-					v[0],
-					v[1],
-					v[2],
-					vi.children[0].text
-				)
-			)
-		)
-		.joiner
-		//.map!(t1 => tuple(
-		//		t1[0],
-		//		t1[1].attributes.filter!(ra => ra.name == "r").front.value,
-		//		t1[1]
-		//	)
-		//k)
-		//.map!(r => tuple(
-		//	r.attributes.filter!(ra => ra.name == "r").front.value.to!size_t(),
-		//	r)
-		//)
-		//.map!(rc => tuple(rc[0], rc[1].children
-		//			.filter!(c => c.name == "c").array)
-		//)
-		.array;
-	writefln("%(%s\n%)", tmp);
-	writeln(typeof(tmp).stringof);
-	return Cell[].init;
+	auto rows = sdRng.front.children
+		.filter!(r => r.name == "row");
+
+	Cell[] ret;
+	foreach(row; rows) {
+		foreach(c; row.children.filter!(r => r.name == "c")) {
+			Cell tmp;
+			tmp.row = row.attributes.filter!(a => a.name == "r")
+				.front.value.to!size_t();
+			tmp.r = c.attributes.filter!(a => a.name == "r")
+				.front.value;
+			auto t = c.attributes.filter!(a => a.name == "t");
+			if(t.empty) {
+				writeln("Found a strange empty cell");
+				continue;
+			}
+			tmp.t = t.front.value;
+			auto v = c.children.filter!(c => c.name == "v");
+			enforce(!v.empty);
+			tmp.v = v.front.children[0].text;
+			auto f = c.children.filter!(c => c.name == "f");
+			if(!f.empty) {
+				tmp.f = f.front.children[0].text;
+			}
+			ret ~= tmp;
+		}
+	}
+	return ret;
 }
 
-Sheet readSheet(string filename, int sheetId) {
-	auto file = readFile(filename);
-	auto ams = file.directory;
-	immutable ss = "xl/sharedStrings.xml";
-	enforce(ss in ams, "No sharedStrings found");
-	Variant[] sharedStrings = readSharedEntries(file, ams[ss]);
-	writeln(sharedStrings);
+Cell[] insertValueIntoCell(Cell[] cells, Variant[] ss) {
+	foreach(ref Cell c; cells) {
+		assert(c.t == "n" || c.t == "s", format("%s", c));
+		if(c.t == "n") {
+			c.value = convert(c.v);
+		} else {
+			size_t idx = to!size_t(c.v);
+			c.value = ss[idx];
+		}
+	}
+	return cells;
+}
 
-	immutable wsStr = "xl/worksheets/sheet" ~ to!string(sheetId) ~ ".xml";
-	enforce(wsStr in ams, wsStr ~ " Not found in "
-			~ ams.keys().joiner(" ").to!string()
-		);
-	Cell[] cells = readCells(file, ams[wsStr]);
-	return Sheet.init;
+Pos toPos(string s) {
+	import std.algorithm : reverse;
+	import std.string : indexOfAny;
+	import std.math : pow;
+	ptrdiff_t fn = s.indexOfAny("0123456789");
+	enforce(fn != -1, s);
+	size_t row = to!size_t(to!long(s[fn .. $]) - 1);
+	size_t col = 0;
+	string colS = s[0 .. fn];
+	foreach(idx, char c; colS) {
+		col = col * 26 + (c - 'A' + 1);
+	}
+	return Pos(row, col - 1);
 }
 
 unittest {
+	assert(toPos("A1").col == 0);
+	assert(toPos("Z1").col == 25);
+	assert(toPos("AA1").col == 26);
+}
+
+Pos elementMax(Pos a, Pos b) {
+	return Pos(a.row < b.row ? b.row : a.row,
+			a.col < b.col ? b.col : a.col);
+}
+
+unittest {
+	import std.math : approxEqual;
 	auto r = readSheet("multitable.xlsx", "wb1");
-	writeln(r);
+	writefln("%s\n%(%s\n%)", r.maxPos, r.cells);
+	assert(approxEqual(r.table[12][5].get!double(), 26.74),
+			format("%s", r.table[12][5])
+		);
 }
