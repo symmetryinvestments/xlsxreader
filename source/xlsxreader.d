@@ -80,12 +80,72 @@ struct Sheet {
 		}
 	}
 
+	// Column
+
 	Column!(T) iterateColumn(T)(size_t col, size_t start, size_t end) {
 		return Column!(T)(&this, col, start, end);
 	}
 
+	Column!(long) iterateColumnLong(size_t col, size_t start, size_t end) {
+		return Column!(long)(&this, col, start, end);
+	}
+
+	Column!(double) iterateColumnDouble(size_t col, size_t start, size_t end) {
+		return Column!(double)(&this, col, start, end);
+	}
+
+	Column!(string) iterateColumnString(size_t col, size_t start, size_t end) {
+		return Column!(string)(&this, col, start, end);
+	}
+
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t start,
+			size_t end)
+	{
+		return Column!(DateTime)(&this, col, start, end);
+	}
+
+	Column!(Date) iterateColumnDate(size_t col, size_t start, size_t end) {
+		return Column!(Date)(&this, col, start, end);
+	}
+
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t start,
+			size_t end)
+	{
+		return Column!(TimeOfDay)(&this, col, start, end);
+	}
+
+	// Row
+
 	Row!(T) iterateRow(T)(size_t row, size_t start, size_t end) {
 		return Row!(T)(&this, row, start, end);
+	}
+
+	Row!(long) iterateRowLong(size_t row, size_t start, size_t end) {
+		return Row!(long)(&this, row, start, end);
+	}
+
+	Row!(double) iterateRowDouble(size_t row, size_t start, size_t end) {
+		return Row!(double)(&this, row, start, end);
+	}
+
+	Row!(string) iterateRowString(size_t row, size_t start, size_t end) {
+		return Row!(string)(&this, row, start, end);
+	}
+
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t start,
+			size_t end)
+	{
+		return Row!(DateTime)(&this, row, start, end);
+	}
+
+	Row!(Date) iterateRowDate(size_t row, size_t start, size_t end) {
+		return Row!(Date)(&this, row, start, end);
+	}
+
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t start,
+			size_t end)
+	{
+		return Row!(TimeOfDay)(&this, row, start, end);
 	}
 }
 
@@ -335,8 +395,8 @@ T convertTo(T)(Data var) {
 				(double l) => doubleToDateTime(l),
 				(string l) => doubleToDateTime(to!double(l)),
 				(DateTime l) => l,
-				(Date l) => DateTime(l),
-				(TimeOfDay l) => DateTime(l),
+				(Date l) => DateTime(l, TimeOfDay.init),
+				(TimeOfDay l) => DateTime(Date.init, l),
 				() => DateTime.init)
 			();
 	} else static if(is(T == Date)) {
@@ -356,8 +416,10 @@ T convertTo(T)(Data var) {
 
 		return var.visit!(
 				(long l) => TimeOfDay.init,
-				(double l) => longToDate(l - cast(long)l),
-				(string l) => longToDate(to!double(l) - cast(long)to!double(l)),
+				(double l) => doubleToTimeOfDay(l - cast(long)l),
+				(string l) => doubleToTimeOfDay(
+						to!double(l) - cast(long)to!double(l)
+					),
 				(DateTime l) => l.timeOfDay,
 				(Date l) => TimeOfDay.init,
 				(TimeOfDay l) => l,
