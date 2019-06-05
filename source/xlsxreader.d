@@ -1,13 +1,13 @@
 module xslxreader;
 
 import std.algorithm.iteration : filter, map, joiner;
-import std.algorithm.sorting : sort;
 import std.algorithm.mutation : reverse;
 import std.algorithm.searching : all;
-import std.datetime : DateTime, Date, TimeOfDay;
-import std.array : array;
+import std.algorithm.sorting : sort;
+import std.array : array, empty, front, popFront;
 import std.ascii : isDigit;
 import std.conv : to;
+import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
 import std.file : read, exists, readText;
 import std.format : format;
@@ -89,6 +89,21 @@ struct Sheet {
 
 	// Column
 
+	Iterator!T getColumn(T)(size_t col, size_t start, size_t end) {
+		auto c = this.iterateColumn!T(col, start, end);
+		return Iterator!T(c.array);
+	}
+
+	private enum t = q{
+	Iterator!(%1$s) getColumn%2$s(size_t col, size_t start, size_t end) {
+		return getColumn!(%1$s)(col, start, end);
+	}
+	};
+	static foreach(T; ["long", "double", "Date", "TimeOfDay", "DateTime"]) {
+		import std.ascii : toUpper;
+		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
+	}
+
 	Column!(T) iterateColumn(T)(size_t col, size_t start, size_t end) {
 		return Column!(T)(&this, col, start, end);
 	}
@@ -123,6 +138,21 @@ struct Sheet {
 
 	// Row
 
+	Iterator!T getRow(T)(size_t row, size_t start, size_t end) {
+		auto c = this.iterateRow!T(row, start, end);
+		return Iterator!T(c.array);
+	}
+
+	private enum t2 = q{
+	Iterator!(%1$s) getRow%2$s(size_t row, size_t start, size_t end) {
+		return getRow!(%1$s)(row, start, end);
+	}
+	};
+	static foreach(T; ["long", "double", "Date", "TimeOfDay", "DateTime"]) {
+		import std.ascii : toUpper;
+		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
+	}
+
 	Row!(T) iterateRow(T)(size_t row, size_t start, size_t end) {
 		return Row!(T)(&this, row, start, end);
 	}
@@ -153,6 +183,26 @@ struct Sheet {
 			size_t end)
 	{
 		return Row!(TimeOfDay)(&this, row, start, end);
+	}
+}
+
+struct Iterator(T) {
+	T[] data;
+
+	this(T[] data) {
+		this.data = data;
+	}
+
+	@property bool empty() const {
+		return this.data.empty;
+	}
+
+	void popFront() {
+		this.data.popFront();
+	}
+
+	@property T front() {
+		return this.data.front;
 	}
 }
 
@@ -370,7 +420,9 @@ Date stringToDate(string s) {
 }
 
 T convertTo(T)(Data var) {
-	static if(isSomeString!T) {
+	static if(is(T == Data)) {
+		return var;
+	} else static if(isSomeString!T) {
 		return var.visit!(
 				(long l) => to!string(l),
 				(double l) => to!string(l),
@@ -673,7 +725,11 @@ unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
-	assert(equal(r, [1, 2, 3, 4, 5]), format("%s", r));
+	auto expected = [1, 2, 3, 4, 5];
+	assert(equal(r, expected), format("%s", r));
+
+	auto r2 = s.getRow!long(15, 1, 6);
+	assert(equal(r, expected));
 }
 
 unittest {
@@ -685,4 +741,10 @@ unittest {
 		 Date(1986,7,2), Date(2038,1,19)
 	];
 	assert(equal(rslt, target), format("\n%s\n%s", rslt, target));
+
+	auto it = s.getColumn!Date(1, 1, 6);
+	assert(equal(rslt, it));
+
+	auto it2 = s.getColumnDate(1, 1, 6);
+	assert(equal(rslt, it2));
 }
