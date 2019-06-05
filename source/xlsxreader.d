@@ -1,6 +1,9 @@
 module xslxreader;
 
-import std.algorithm : filter, map, sort, all, joiner, each;
+import std.algorithm.iteration : filter, map, joiner;
+import std.algorithm.sorting : sort;
+import std.algorithm.mutation : reverse;
+import std.algorithm.searching : all;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.array : array;
 import std.ascii : isDigit;
@@ -221,27 +224,27 @@ Date longToDate(long d) {
 	// modifed from https://www.codeproject.com/Articles/2750/
 	// Excel-Serial-Date-to-Day-Month-Year-and-Vice-Versa
 
-    // Excel/Lotus 123 have a bug with 29-02-1900. 1900 is not a
-    // leap year, but Excel/Lotus 123 think it is...
-    if(d == 60) {
+	// Excel/Lotus 123 have a bug with 29-02-1900. 1900 is not a
+	// leap year, but Excel/Lotus 123 think it is...
+	if(d == 60) {
 		return Date(1900, 2,  29);
-    } else if(d < 60) {
-        // Because of the 29-02-1900 bug, any serial date
-        // under 60 is one off... Compensate.
-        ++d;
-    }
+	} else if(d < 60) {
+		// Because of the 29-02-1900 bug, any serial date
+		// under 60 is one off... Compensate.
+		++d;
+	}
 
-    // Modified Julian to DMY calculation with an addition of 2415019
-    int l = cast(int)d + 68569 + 2415019;
-    int n = int(( 4 * l ) / 146097);
-    l = l - int(( 146097 * n + 3 ) / 4);
-    int i = int(( 4000 * ( l + 1 ) ) / 1461001);
-    l = l - int(( 1461 * i ) / 4) + 31;
-    int j = int(( 80 * l ) / 2447);
-    int nDay = l - int(( 2447 * j ) / 80);
-    l = int(j / 11);
-    int nMonth = j + 2 - ( 12 * l );
-    int nYear = 100 * ( n - 49 ) + i + l;
+	// Modified Julian to DMY calculation with an addition of 2415019
+	int l = cast(int)d + 68569 + 2415019;
+	int n = int(( 4 * l ) / 146097);
+	l = l - int(( 146097 * n + 3 ) / 4);
+	int i = int(( 4000 * ( l + 1 ) ) / 1461001);
+	l = l - int(( 1461 * i ) / 4) + 31;
+	int j = int(( 80 * l ) / 2447);
+	int nDay = l - int(( 2447 * j ) / 80);
+	l = int(j / 11);
+	int nMonth = j + 2 - ( 12 * l );
+	int nYear = 100 * ( n - 49 ) + i + l;
 	return Date(nYear, nMonth, nDay);
 }
 
@@ -249,26 +252,28 @@ long dateToLong(Date d) {
 	// modifed from https://www.codeproject.com/Articles/2750/
 	// Excel-Serial-Date-to-Day-Month-Year-and-Vice-Versa
 
-    // Excel/Lotus 123 have a bug with 29-02-1900. 1900 is not a
-    // leap year, but Excel/Lotus 123 think it is...
-    if(d.day == 29 && d.month == 02 && d.year ==1900) {
-        return 60;
+	// Excel/Lotus 123 have a bug with 29-02-1900. 1900 is not a
+	// leap year, but Excel/Lotus 123 think it is...
+	if(d.day == 29 && d.month == 2 && d.year == 1900) {
+		return 60;
 	}
 
-    // DMY to Modified Julian calculated with an extra subtraction of 2415019.
-    long nSerialDate =
-            int(( 1461 * ( d.year + 4800 + int(( d.month - 14 ) / 12) ) ) / 4) +
-            int(( 367 * ( d.month - 2 - 12 * ( ( d.month - 14 ) / 12 ) ) ) / 12) -
-            int(( 3 * ( int(( d.year + 4900 + int(( d.month - 14 ) / 12) ) / 100) ) ) / 4) +
-            d.day - 2415019 - 32075;
+	// DMY to Modified Julian calculated with an extra subtraction of 2415019.
+	long nSerialDate =
+			int(( 1461 * ( d.year + 4800 + int(( d.month - 14 ) / 12) ) ) / 4) +
+			int(( 367 * ( d.month - 2 - 12 *
+				( ( d.month - 14 ) / 12 ) ) ) / 12) -
+				int(( 3 * ( int(( d.year + 4900
+				+ int(( d.month - 14 ) / 12) ) / 100) ) ) / 4) +
+				d.day - 2415019 - 32075;
 
-    if(nSerialDate < 60) {
-        // Because of the 29-02-1900 bug, any serial date
-        // under 60 is one off... Compensate.
-        nSerialDate--;
-    }
+	if(nSerialDate < 60) {
+		// Because of the 29-02-1900 bug, any serial date
+		// under 60 is one off... Compensate.
+		nSerialDate--;
+	}
 
-    return nSerialDate;
+	return nSerialDate;
 }
 
 unittest {
@@ -294,7 +299,7 @@ double timeOfDayToDouble(TimeOfDay tod) {
 	long h = tod.hour * 60 * 60;
 	long m = tod.minute * 60;
 	long s = tod.second;
-    return (h + m + s) / (24.0 * 60.0 * 60.0);
+	return (h + m + s) / (24.0 * 60.0 * 60.0);
 }
 
 unittest {
@@ -554,7 +559,7 @@ Data convert(string s) {
 	];
 
 	string replaceStrings(string s) {
-		import std.algorithm : canFind;
+		import std.algorithm.searching : canFind;
 		import std.array : replace;
 		foreach(tr; toRe) {
 			while(canFind(s, tr.from)) {
@@ -626,7 +631,6 @@ Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
 }
 
 Pos toPos(string s) {
-	import std.algorithm : reverse;
 	import std.string : indexOfAny;
 	import std.math : pow;
 	ptrdiff_t fn = s.indexOfAny("0123456789");
