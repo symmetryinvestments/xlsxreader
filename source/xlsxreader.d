@@ -22,6 +22,7 @@ import std.zip;
 
 import dxml.dom;
 
+///
 struct Pos {
 	// zero based
 	size_t row;
@@ -29,8 +30,10 @@ struct Pos {
 	size_t col;
 }
 
+///
 alias Data = Algebraic!(long,double,string,DateTime,Date,TimeOfDay);
 
+///
 struct Cell {
 	string loc;
 	size_t row; // row[r]
@@ -42,6 +45,7 @@ struct Cell {
 	Pos position;
 }
 
+///
 struct Sheet {
 	Cell[] cells;
 	Data[][] table;
@@ -152,6 +156,7 @@ struct Sheet {
 	}
 }
 
+///
 struct Row(T) {
 	Sheet* sheet;
 	const size_t row;
@@ -186,6 +191,7 @@ struct Row(T) {
 	}
 }
 
+///
 struct Column(T) {
 	Sheet* sheet;
 	const size_t col;
