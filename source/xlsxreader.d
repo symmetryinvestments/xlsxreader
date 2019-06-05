@@ -99,7 +99,9 @@ struct Sheet {
 		return getColumn!(%1$s)(col, start, end);
 	}
 	};
-	static foreach(T; ["long", "double", "Date", "TimeOfDay", "DateTime"]) {
+	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
+			"DateTime"])
+	{
 		import std.ascii : toUpper;
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
@@ -148,7 +150,9 @@ struct Sheet {
 		return getRow!(%1$s)(row, start, end);
 	}
 	};
-	static foreach(T; ["long", "double", "Date", "TimeOfDay", "DateTime"]) {
+	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
+			"DateTime"])
+	{
 		import std.ascii : toUpper;
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
