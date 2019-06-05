@@ -1,6 +1,7 @@
 module xslxreader;
 
 import std.algorithm : filter, map, sort, all, joiner, each;
+import std.datetime : DateTime, Date, TimeOfDay;
 import std.array : array;
 import std.ascii : isDigit;
 import std.conv : to;
@@ -10,6 +11,7 @@ import std.format : format;
 import std.range : tee;
 import std.regex;
 import std.stdio;
+import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : tuple;
 import std.utf : byChar;
 import std.variant;
@@ -24,6 +26,8 @@ struct Pos {
 	size_t col;
 }
 
+alias Data = Algebraic!(long,double,string,DateTime,Date,TimeOfDay);
+
 struct Cell {
 	string loc;
 	size_t row; // row[r]
@@ -31,30 +35,46 @@ struct Cell {
 	string r; // c[r]
 	string v; // c.v the value or ptr
 	string f; // c.f the formula
-	Variant value;
+	Data value;
 	Pos position;
 }
 
 struct Sheet {
 	Cell[] cells;
-	Variant[][] table;
+	Data[][] table;
 	Pos maxPos;
 
 	void printTable() {
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach(row; this.table) {
-			foreach(idx, Variant col; row) {
-				string s = col.hasValue() ? col.toString() : "";
+			foreach(idx, Data col; row) {
+				string s = col.visit!(
+						(long l) => to!string(l),
+						(double l) => to!string(l),
+						(string l) => l,
+						(DateTime l) => l.toISOExtString(),
+						(Date l) => l.toISOExtString(),
+						(TimeOfDay l) => l.toISOExtString(),
+						() => "")
+					();
+
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
 			}
 		}
 		maxCol[] += 1;
 
 		foreach(row; this.table) {
-			foreach(idx, Variant col; row) {
-				writef("%*s, ", maxCol[idx], col.hasValue()
-						? col.toString()
-						: "");
+			foreach(idx, Data col; row) {
+				string s = col.visit!(
+						(long l) => to!string(l),
+						(double l) => to!string(l),
+						(string l) => l,
+						(DateTime l) => l.toISOExtString(),
+						(Date l) => l.toISOExtString(),
+						(TimeOfDay l) => l.toISOExtString(),
+						() => "")
+					();
+				writef("%*s, ", maxCol[idx], s);
 			}
 			writeln();
 		}
@@ -66,11 +86,15 @@ struct Sheet {
 }
 
 T convertTo(T)(Variant var) {
-	import std.traits : isIntegral, isFloatingPoint, isSomeString;
 	if(is(T == Variant)) {
 		return var;
-	} static if(isSomeString!T) {
+	} else static if(isSomeString!T) {
+		return var.coerce!T();
+	} else static if(is(T == DateTime)) {
+	} else static if(is(T == Date)) {
+	} else static if(is(T == TimeOfDay)) {
 	}
+	assert(false);
 }
 
 struct Row(T) {
@@ -138,7 +162,7 @@ Sheet readSheet(string filename, int sheetId) {
 	auto ams = file.directory;
 	immutable ss = "xl/sharedStrings.xml";
 	enforce(ss in ams, "No sharedStrings found");
-	Variant[] sharedStrings = readSharedEntries(file, ams[ss]);
+	Data[] sharedStrings = readSharedEntries(file, ams[ss]);
 	writeln(sharedStrings);
 
 	immutable wsStr = "xl/worksheets/sheet" ~ to!string(sheetId) ~ ".xml";
@@ -153,14 +177,14 @@ Sheet readSheet(string filename, int sheetId) {
 		maxPos = elementMax(maxPos, c.position);
 	}
 	ret.maxPos = maxPos;
-	ret.table = new Variant[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
+	ret.table = new Data[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
 	foreach(c; ret.cells) {
 		ret.table[c.position.row][c.position.col] = c.value;
 	}
 	return ret;
 }
 
-Variant[] readSharedEntries(ZipArchive za, ArchiveMember am) {
+Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	ubyte[] ss = za.expand(am);
 	string ssData = cast(string)ss;
 	auto dom = parseDOM(ssData);
@@ -173,7 +197,7 @@ Variant[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 		.map!(si => si.children[0])
 		.tee!(t => assert(t.name == "t"))
 		//.tee!(t => writeln(t))
-		.map!(t => Variant(convert(t.children[0].text)))
+		.map!(t => Data(convert(t.children[0].text)))
 		.array;
 }
 
@@ -189,20 +213,20 @@ bool canConvertToDouble(string s) {
 	return cap.empty || cap.front.hit != s ? false : true;
 }
 
-struct ToRe {
-	string from;
-	string to;
-}
+Data convert(string s) {
+	struct ToRe {
+		string from;
+		string to;
+	}
 
-immutable ToRe[] toRe = [
-	ToRe( "&amp;", "&"),
-	ToRe( "&gt;", "<"),
-	ToRe( "&lt;", ">"),
-	ToRe( "&quot;", "\""),
-	ToRe( "&apos;", "'")
-];
+	immutable ToRe[] toRe = [
+		ToRe( "&amp;", "&"),
+		ToRe( "&gt;", "<"),
+		ToRe( "&lt;", ">"),
+		ToRe( "&quot;", "\""),
+		ToRe( "&apos;", "'")
+	];
 
-Variant convert(string s) {
 	string replaceStrings(string s) {
 		import std.algorithm : canFind;
 		import std.array : replace;
@@ -215,11 +239,11 @@ Variant convert(string s) {
 	}
 
 	if(canConvertToLong(s)) {
-		return Variant(to!long(s));
+		return Data(to!long(s));
 	} else if(canConvertToDouble(s)) {
-		return Variant(to!double(s));
+		return Data(to!double(s));
 	} else {
-		return Variant(replaceStrings(s));
+		return Data(replaceStrings(s));
 	}
 }
 
@@ -262,7 +286,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	return ret;
 }
 
-Cell[] insertValueIntoCell(Cell[] cells, Variant[] ss) {
+Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
 	foreach(ref Cell c; cells) {
 		assert(c.t == "n" || c.t == "s", format("%s", c));
 		if(c.t == "n") {
