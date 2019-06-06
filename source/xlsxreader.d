@@ -551,11 +551,15 @@ Sheet readSheet(string filename, string sheetName) {
 }
 
 Sheet readSheet(string filename, int sheetId) {
+	scope(failure) {
+		writefln("Failed at file %s and sheet %d", filename, sheetId);
+	}
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable ss = "xl/sharedStrings.xml";
-	enforce(ss in ams, "No sharedStrings found");
-	Data[] sharedStrings = readSharedEntries(file, ams[ss]);
+	Data[] sharedStrings = (ss in ams)
+		? readSharedEntries(file, ams[ss])
+		: [];
 	writeln(sharedStrings);
 
 	immutable wsStr = "xl/worksheets/sheet" ~ to!string(sheetId) ~ ".xml";
@@ -581,17 +585,52 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	ubyte[] ss = za.expand(am);
 	string ssData = cast(string)ss;
 	auto dom = parseDOM(ssData);
+	Data[] ret;
+	if(dom.type != EntityType.elementStart) {
+		return ret;
+	}
 	assert(dom.children.length == 1);
 	auto sst = dom.children[0];
 	assert(sst.name == "sst");
 	auto siRng = sst.children.filter!(c => c.name == "si");
 	assert(!siRng.empty);
-	return siRng
-		.map!(si => si.children[0])
-		.tee!(t => assert(t.name == "t"))
-		//.tee!(t => writeln(t))
-		.map!(t => Data(convert(t.children[0].text)))
-		.array;
+	foreach(si; siRng) {
+		if(si.type != EntityType.elementStart) {
+			continue;
+		}
+		//ret ~= extractData(si);
+		string tmp;
+		foreach(tORr; si.children) {
+			if(tORr.name == "t") {
+				ret ~= Data(convert(tORr.children[0].text));
+			} else if(tORr.name == "r") {
+				foreach(r; tORr.children.filter!(r => r.name == "t")) {
+					tmp ~= r.children[0].text;
+				}
+			}
+		}
+		if(!tmp.empty) {
+			ret ~= Data(convert(tmp));
+		}
+	}
+	return ret;
+}
+
+Data extractData(DOMEntity!string si) {
+	string tmp;
+	foreach(tORr; si.children) {
+		if(tORr.name == "t") {
+			return Data(convert(tORr.children[0].text));
+		} else if(tORr.name == "r") {
+			foreach(r; tORr.children.filter!(r => r.name == "t")) {
+				tmp ~= r.children[0].text;
+			}
+		}
+	}
+	if(!tmp.empty) {
+		return Data(convert(tmp));
+	}
+	assert(false);
 }
 
 private bool canConvertToLong(string s) {
@@ -641,6 +680,7 @@ Data convert(string s) {
 }
 
 Cell[] readCells(ZipArchive za, ArchiveMember am) {
+	Cell[] ret;
 	ubyte[] ss = za.expand(am);
 	string ssData = cast(string)ss;
 	auto dom = parseDOM(ssData);
@@ -649,11 +689,16 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	assert(ws.name == "worksheet");
 	auto sdRng = ws.children.filter!(c => c.name == "sheetData");
 	assert(!sdRng.empty);
+	if(sdRng.front.type != EntityType.elementStart) {
+		return ret;
+	}
 	auto rows = sdRng.front.children
 		.filter!(r => r.name == "row");
 
-	Cell[] ret;
 	foreach(row; rows) {
+		if(row.type != EntityType.elementStart || row.children.empty) {
+			continue;
+		}
 		foreach(c; row.children.filter!(r => r.name == "c")) {
 			Cell tmp;
 			tmp.row = row.attributes.filter!(a => a.name == "r")
@@ -666,9 +711,12 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 				continue;
 			}
 			tmp.t = t.front.value;
-			auto v = c.children.filter!(c => c.name == "v");
-			enforce(!v.empty);
-			tmp.v = v.front.children[0].text;
+			if(tmp.t == "s" || tmp.t == "n") {
+				auto v = c.children.filter!(c => c.name == "v");
+				enforce(!v.empty);
+				tmp.v = v.front.children[0].text;
+			} else if(tmp.t == "inlineStr") {
+			}
 			auto f = c.children.filter!(c => c.name == "f");
 			if(!f.empty) {
 				tmp.f = f.front.children[0].text;
@@ -683,6 +731,7 @@ Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
 	foreach(ref Cell c; cells) {
 		assert(c.t == "n" || c.t == "s", format("%s", c));
 		if(c.t == "n") {
+			writefln("'%s' %s", c.v, c);
 			c.value = convert(c.v);
 		} else {
 			size_t idx = to!size_t(c.v);
@@ -757,5 +806,9 @@ unittest {
 	import std.file : dirEntries, SpanMode;
 	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)) {
 		writeln(de.name);
+		auto sn = sheetNames(de.name);
+		foreach(s; sn) {
+			auto sheet = readSheet(de.name, s.id);
+		}
 	}
 }
