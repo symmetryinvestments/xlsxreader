@@ -6,6 +6,7 @@ import std.algorithm.searching : all;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, popFront;
 import std.ascii : isDigit;
+import std.experimental.logger;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
@@ -31,7 +32,7 @@ struct Pos {
 }
 
 ///
-alias Data = Algebraic!(long,double,string,DateTime,Date,TimeOfDay);
+alias Data = Algebraic!(bool,long,double,string,DateTime,Date,TimeOfDay);
 
 ///
 struct Cell {
@@ -56,6 +57,7 @@ struct Sheet {
 		foreach(row; this.table) {
 			foreach(idx, Data col; row) {
 				string s = col.visit!(
+						(bool l) => to!string(l),
 						(long l) => to!string(l),
 						(double l) => to!string(l),
 						(string l) => l,
@@ -73,6 +75,7 @@ struct Sheet {
 		foreach(row; this.table) {
 			foreach(idx, Data col; row) {
 				string s = col.visit!(
+						(bool l) => to!string(l),
 						(long l) => to!string(l),
 						(double l) => to!string(l),
 						(string l) => l,
@@ -428,6 +431,7 @@ T convertTo(T)(Data var) {
 		return var;
 	} else static if(isSomeString!T) {
 		return var.visit!(
+				(bool l) => to!string(l),
 				(long l) => to!string(l),
 				(double l) => to!string(l),
 				(string l) => l,
@@ -438,6 +442,7 @@ T convertTo(T)(Data var) {
 			();
 	} else static if(isIntegral!T) {
 		return var.visit!(
+				(bool l) => to!T(l),
 				(long l) => to!T(l),
 				(double l) => to!T(l),
 				(string l) => to!T(l),
@@ -448,6 +453,7 @@ T convertTo(T)(Data var) {
 			();
 	} else static if(isFloatingPoint!T) {
 		return var.visit!(
+				(bool l) => to!T(l),
 				(long l) => to!T(l),
 				(double l) => to!T(l),
 				(string l) => to!T(l),
@@ -458,6 +464,7 @@ T convertTo(T)(Data var) {
 			();
 	} else static if(is(T == DateTime)) {
 		return var.visit!(
+				(bool l) => DateTime.init,
 				(long l) => doubleToDateTime(to!long(l)),
 				(double l) => doubleToDateTime(l),
 				(string l) => doubleToDateTime(to!double(l)),
@@ -470,6 +477,7 @@ T convertTo(T)(Data var) {
 		import std.math : lround;
 
 		return var.visit!(
+				(bool l) => Date.init,
 				(long l) => longToDate(l),
 				(double l) => longToDate(lround(l)),
 				(string l) => stringToDate(l),
@@ -482,6 +490,7 @@ T convertTo(T)(Data var) {
 		import std.math : lround;
 
 		return var.visit!(
+				(bool l) => TimeOfDay.init,
 				(long l) => TimeOfDay.init,
 				(double l) => doubleToTimeOfDay(l - cast(long)l),
 				(string l) => doubleToTimeOfDay(
@@ -508,6 +517,7 @@ private ZipArchive readFile(string filename) {
 struct SheetNameId {
 	string name;
 	int id;
+	string rid;
 }
 
 SheetNameId[] sheetNames(string filename) {
@@ -528,7 +538,8 @@ SheetNameId[] sheetNames(string filename) {
 		.map!(s => SheetNameId(
 					s.attributes.filter!(a => a.name == "name").front.value,
 					s.attributes.filter!(a => a.name == "sheetId").front
-						.value.to!int()
+						.value.to!int(),
+					s.attributes.filter!(a => a.name == "r:id").front.value,
 				)
 		)
 		.array
@@ -542,17 +553,44 @@ unittest {
 	assert(r[0].id == 1);
 }
 
+struct Relationships {
+	string id;
+	string file;
+}
+
+Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) {
+	ubyte[] d = za.expand(am);
+	string relData = cast(string)d;
+	auto dom = parseDOM(relData);
+	assert(dom.children.length == 1);
+	auto rel = dom.children[0];
+	assert(rel.name == "Relationships");
+	auto relRng = rel.children.filter!(c => c.name == "Relationship");
+	assert(!relRng.empty);
+
+	Relationships[string] ret;
+	foreach(r; relRng) {
+		Relationships tmp;
+		tmp.id = r.attributes.filter!(a => a.name == "Id")
+			.front.value;
+		tmp.file = r.attributes.filter!(a => a.name == "Target")
+			.front.value;
+		ret[tmp.id] = tmp;
+	}
+	return ret;
+}
+
 Sheet readSheet(string filename, string sheetName) {
 	SheetNameId[] sheets = sheetNames(filename);
 	auto sRng = sheets.filter!(s => s.name == sheetName);
 	enforce(!sRng.empty, "No sheet with name " ~ sheetName
 			~ " found in file " ~ filename);
-	return readSheet(filename, sRng.front.id);
+	return readSheetImpl(filename, sRng.front.rid);
 }
 
-Sheet readSheet(string filename, int sheetId) {
+Sheet readSheetImpl(string filename, string rid) {
 	scope(failure) {
-		writefln("Failed at file %s and sheet %d", filename, sheetId);
+		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	}
 	auto file = readFile(filename);
 	auto ams = file.directory;
@@ -560,14 +598,21 @@ Sheet readSheet(string filename, int sheetId) {
 	Data[] sharedStrings = (ss in ams)
 		? readSharedEntries(file, ams[ss])
 		: [];
-	writeln(sharedStrings);
+	logf("%s", sharedStrings);
 
-	immutable wsStr = "xl/worksheets/sheet" ~ to!string(sheetId) ~ ".xml";
-	enforce(wsStr in ams, wsStr ~ " Not found in "
-			~ ams.keys().joiner(" ").to!string()
-		);
+	Relationships[string] rels = parseRelationships(file,
+			ams["xl/_rels/workbook.xml.rels"]);
+
+	Relationships* sheetRel = rid in rels;
+	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
+				filename));
+	string fn = "xl/" ~ sheetRel.file;
+	ArchiveMember* sheet = fn in ams;
+	enforce(sheet !is null, format("sheetRel.file '%s' not in [%s]",
+				fn, ams.keys()));
+
 	Sheet ret;
-	ret.cells = insertValueIntoCell(readCells(file, ams[wsStr]), sharedStrings);
+	ret.cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
 	Pos maxPos;
 	foreach(ref c; ret.cells) {
 		c.position = toPos(c.r);
@@ -601,12 +646,14 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 		//ret ~= extractData(si);
 		string tmp;
 		foreach(tORr; si.children) {
-			if(tORr.name == "t") {
+			if(tORr.name == "t" && !tORr.children.empty) {
 				ret ~= Data(convert(tORr.children[0].text));
 			} else if(tORr.name == "r") {
 				foreach(r; tORr.children.filter!(r => r.name == "t")) {
 					tmp ~= r.children[0].text;
 				}
+			} else {
+				ret ~= Data.init;
 			}
 		}
 		if(!tmp.empty) {
@@ -616,11 +663,15 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	return ret;
 }
 
-Data extractData(DOMEntity!string si) {
+string extractData(DOMEntity!string si) {
 	string tmp;
 	foreach(tORr; si.children) {
 		if(tORr.name == "t") {
-			return Data(convert(tORr.children[0].text));
+			if(!tORr.attributes.filter!(a => a.name == "xml:space").empty) {
+				return "";
+			} else {
+				return tORr.children[0].text;
+			}
 		} else if(tORr.name == "r") {
 			foreach(r; tORr.children.filter!(r => r.name == "t")) {
 				tmp ~= r.children[0].text;
@@ -628,12 +679,15 @@ Data extractData(DOMEntity!string si) {
 		}
 	}
 	if(!tmp.empty) {
-		return Data(convert(tmp));
+		return tmp;
 	}
 	assert(false);
 }
 
 private bool canConvertToLong(string s) {
+	if(s.empty) {
+		return false;
+	}
 	return s.byChar.all!isDigit();
 }
 
@@ -686,7 +740,9 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	auto dom = parseDOM(ssData);
 	assert(dom.children.length == 1);
 	auto ws = dom.children[0];
-	assert(ws.name == "worksheet");
+	if(ws.name != "worksheet") {
+		return ret;
+	}
 	auto sdRng = ws.children.filter!(c => c.name == "sheetData");
 	assert(!sdRng.empty);
 	if(sdRng.front.type != EntityType.elementStart) {
@@ -707,7 +763,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 				.front.value;
 			auto t = c.attributes.filter!(a => a.name == "t");
 			if(t.empty) {
-				writeln("Found a strange empty cell");
+				writefln("Found a strange empty cell \n%s", c);
 				continue;
 			}
 			tmp.t = t.front.value;
@@ -716,6 +772,8 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 				enforce(!v.empty);
 				tmp.v = v.front.children[0].text;
 			} else if(tmp.t == "inlineStr") {
+				auto is_ = c.children.filter!(c => c.name == "is");
+				tmp.v = extractData(is_.front);
 			}
 			auto f = c.children.filter!(c => c.name == "f");
 			if(!f.empty) {
@@ -729,12 +787,21 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 
 Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
 	foreach(ref Cell c; cells) {
-		assert(c.t == "n" || c.t == "s", format("%s", c));
+		assert(c.t == "n" || c.t == "s" || c.t == "inlineStr" || c.t == "b",
+				format("%s", c)
+			);
 		if(c.t == "n") {
-			writefln("'%s' %s", c.v, c);
+			logf("'%s' %s", c.v, c);
 			c.value = convert(c.v);
+		} else if(c.t == "inlineStr") {
+			logf("'%s' %s", c.v, c);
+			c.value = convert(c.v);
+		} else if(c.t == "b") {
+			logf("'%s' %s", c.v, c);
+			c.value = c.v == "1";
 		} else {
 			size_t idx = to!size_t(c.v);
+			logf("'%s' %s", c.v, idx);
 			c.value = ss[idx];
 		}
 	}
@@ -808,7 +875,7 @@ unittest {
 		writeln(de.name);
 		auto sn = sheetNames(de.name);
 		foreach(s; sn) {
-			auto sheet = readSheet(de.name, s.id);
+			auto sheet = readSheet(de.name, s.name);
 		}
 	}
 }
