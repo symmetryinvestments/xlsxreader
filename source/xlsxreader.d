@@ -764,9 +764,9 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 			auto t = c.attributes.filter!(a => a.name == "t");
 			if(t.empty) {
 				writefln("Found a strange empty cell \n%s", c);
-				continue;
+			} else {
+				tmp.t = t.front.value;
 			}
-			tmp.t = t.front.value;
 			if(tmp.t == "s" || tmp.t == "n") {
 				auto v = c.children.filter!(c => c.name == "v");
 				enforce(!v.empty);
@@ -774,10 +774,16 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 			} else if(tmp.t == "inlineStr") {
 				auto is_ = c.children.filter!(c => c.name == "is");
 				tmp.v = extractData(is_.front);
+			} else if(c.type == EntityType.elementStart) {
+				auto v = c.children.filter!(c => c.name == "v");
+				enforce(!v.empty);
+				tmp.v = v.front.children[0].text;
 			}
-			auto f = c.children.filter!(c => c.name == "f");
-			if(!f.empty) {
-				tmp.f = f.front.children[0].text;
+			if(c.type == EntityType.elementStart) {
+				auto f = c.children.filter!(c => c.name == "f");
+				if(!f.empty) {
+					tmp.f = f.front.children[0].text;
+				}
 			}
 			ret ~= tmp;
 		}
@@ -787,10 +793,12 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 
 Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
 	foreach(ref Cell c; cells) {
-		assert(c.t == "n" || c.t == "s" || c.t == "inlineStr" || c.t == "b",
-				format("%s", c)
+		assert(c.t == "n" || c.t == "s" || c.t == "inlineStr" || c.t == "b"
+				|| c.t.empty, format("%s", c)
 			);
-		if(c.t == "n") {
+		if(c.t.empty) {
+			c.value = convert(c.v);
+		} else if(c.t == "n") {
 			logf("'%s' %s", c.v, c);
 			c.value = convert(c.v);
 		} else if(c.t == "inlineStr") {
@@ -867,6 +875,12 @@ unittest {
 
 	auto it2 = s.getColumnDate(1, 1, 6);
 	assert(equal(rslt, it2));
+}
+
+unittest {
+	import std.algorithm.comparison : equal;
+	auto s = readSheet("multitable.xlsx", "Sheet3");
+	assert(s.table[0][0].peek!bool());
 }
 
 unittest {
