@@ -598,7 +598,7 @@ Sheet readSheetImpl(string filename, string rid) {
 	Data[] sharedStrings = (ss in ams)
 		? readSharedEntries(file, ams[ss])
 		: [];
-	logf("%s", sharedStrings);
+	//logf("%s", sharedStrings);
 
 	Relationships[string] rels = parseRelationships(file,
 			ams["xl/_rels/workbook.xml.rels"]);
@@ -763,7 +763,8 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 				.front.value;
 			auto t = c.attributes.filter!(a => a.name == "t");
 			if(t.empty) {
-				writefln("Found a strange empty cell \n%s", c);
+				// we assume that no t attribute means direct number
+				//writefln("Found a strange empty cell \n%s", c);
 			} else {
 				tmp.t = t.front.value;
 			}
@@ -799,17 +800,17 @@ Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
 		if(c.t.empty) {
 			c.value = convert(c.v);
 		} else if(c.t == "n") {
-			logf("'%s' %s", c.v, c);
+			//logf("'%s' %s", c.v, c);
 			c.value = convert(c.v);
 		} else if(c.t == "inlineStr") {
-			logf("'%s' %s", c.v, c);
+			//logf("'%s' %s", c.v, c);
 			c.value = convert(c.v);
 		} else if(c.t == "b") {
-			logf("'%s' %s", c.v, c);
+			//logf("'%s' %s", c.v, c);
 			c.value = c.v == "1";
 		} else {
 			size_t idx = to!size_t(c.v);
-			logf("'%s' %s", c.v, idx);
+			//logf("'%s' %s", c.v, idx);
 			c.value = ss[idx];
 		}
 	}
@@ -885,7 +886,9 @@ unittest {
 
 unittest {
 	import std.file : dirEntries, SpanMode;
-	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)) {
+	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
+			.filter!(a => a.name != "xlsx_files/data03.xlsx"))
+	{
 		writeln(de.name);
 		auto sn = sheetNames(de.name);
 		foreach(s; sn) {
