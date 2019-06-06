@@ -752,3 +752,10 @@ unittest {
 	auto it2 = s.getColumnDate(1, 1, 6);
 	assert(equal(rslt, it2));
 }
+
+unittest {
+	import std.file : dirEntries, SpanMode;
+	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)) {
+		writeln(de.name);
+	}
+}
