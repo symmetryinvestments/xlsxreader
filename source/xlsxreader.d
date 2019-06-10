@@ -146,7 +146,7 @@ enum CellType {
 ///
 struct Sheet {
 	Cell[] cells;
-	Data[][] table;
+	Cell[][] table;
 	Pos maxPos;
 
 	string toString() {
@@ -154,8 +154,8 @@ struct Sheet {
 		import std.array : appender;
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach(row; this.table) {
-			foreach(idx, Data col; row) {
-				string s = col.visit!(
+			foreach(idx, Cell col; row) {
+				string s = col.value.visit!(
 						(bool l) => to!string(l),
 						(long l) => to!string(l),
 						(double l) => format("%.4f", l),
@@ -173,8 +173,8 @@ struct Sheet {
 
 		auto app = appender!string();
 		foreach(row; this.table) {
-			foreach(idx, Data col; row) {
-				string s = col.visit!(
+			foreach(idx, Cell col; row) {
+				string s = col.value.visit!(
 						(bool l) => to!string(l),
 						(long l) => to!string(l),
 						(double l) => format("%.4f", l),
@@ -349,7 +349,16 @@ struct Row(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.sheet.table[this.row][this.cur]);
+		this.front = convertTo!T(this.sheet.table[this.row][this.cur].value);
+	}
+
+	bool canConvertTo(CellType ct) const {
+		for(size_t it = this.start; it < this.end; ++it) {
+			if(!this.sheet.table[this.row][it].canConvertTo(ct)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
 
@@ -384,7 +393,16 @@ struct Column(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.sheet.table[this.cur][this.col]);
+		this.front = convertTo!T(this.sheet.table[this.cur][this.col].value);
+	}
+
+	bool canConvertTo(CellType ct) const {
+		for(size_t it = this.start; it < this.end; ++it) {
+			if(!this.sheet.table[it][this.col].canConvertTo(ct)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }
 
@@ -772,9 +790,9 @@ Sheet readSheetImpl(string filename, string rid) {
 		maxPos = elementMax(maxPos, c.position);
 	}
 	ret.maxPos = maxPos;
-	ret.table = new Data[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
+	ret.table = new Cell[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
 	foreach(c; ret.cells) {
-		ret.table[c.position.row][c.position.col] = c.value;
+		ret.table[c.position.row][c.position.col] = c;
 	}
 	return ret;
 }
@@ -998,7 +1016,7 @@ Pos elementMax(Pos a, Pos b) {
 unittest {
 	import std.math : approxEqual;
 	auto r = readSheet("multitable.xlsx", "wb1");
-	assert(approxEqual(r.table[12][5].get!double(), 26.74),
+	assert(approxEqual(r.table[12][5].value.get!double(), 26.74),
 			format("%s", r.table[12][5])
 		);
 }
@@ -1007,6 +1025,11 @@ unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
+
+	assert(r.canConvertTo(CellType.long_));
+	assert(r.canConvertTo(CellType.double_));
+	assert(r.canConvertTo(CellType.string_));
+
 	auto expected = [1, 2, 3, 4, 5];
 	assert(equal(r, expected), format("%s", r));
 
@@ -1019,6 +1042,7 @@ unittest {
 	auto s = readSheet("multitable.xlsx", "wb2");
 	writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!Date(1, 1, 6);
+
 	auto target = [Date(2019,5,01), Date(2016,12,27), Date(1976,7,23),
 		 Date(1986,7,2), Date(2038,1,19)
 	];
@@ -1034,7 +1058,7 @@ unittest {
 unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
-	assert(s.table[0][0].peek!bool());
+	assert(s.table[0][0].value.peek!bool());
 }
 
 unittest {
