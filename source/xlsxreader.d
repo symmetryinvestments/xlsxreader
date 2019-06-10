@@ -16,7 +16,7 @@ import std.range : tee;
 import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
-import std.typecons : tuple;
+import std.typecons : tuple, Nullable, nullable;
 import std.utf : byChar;
 import std.variant;
 import std.zip;
@@ -44,6 +44,103 @@ struct Cell {
 	string f; // c.f the formula
 	Data value;
 	Pos position;
+
+	bool canConvertTo(CellType ct) const {
+		auto b = (bool l) {
+			switch(ct) {
+				case CellType.datetime: return false;
+				case CellType.timeofday: return false;
+				case CellType.date: return false;
+				default: return true;
+			}
+		};
+
+		auto dt = (DateTime l) {
+			switch(ct) {
+				case CellType.datetime: return true;
+				case CellType.timeofday: return true;
+				case CellType.date: return true;
+				case CellType.double_: return true;
+				default: return false;
+			}
+		};
+
+		auto de = (Date l) {
+			switch(ct) {
+				case CellType.datetime: return false;
+				case CellType.timeofday: return false;
+				case CellType.date: return true;
+				case CellType.double_: return true;
+				case CellType.long_: return true;
+				default: return false;
+			}
+		};
+
+		auto tod = (TimeOfDay l) {
+			switch(ct) {
+				case CellType.datetime: return false;
+				case CellType.timeofday: return true;
+				case CellType.double_: return true;
+				default: return false;
+			}
+		};
+
+		auto l = (long l) {
+			switch(ct) {
+				case CellType.date: return !tryConvertTo!Date(l);
+				case CellType.long_: return true;
+				case CellType.string_: return true;
+				case CellType.double_: return true;
+				default: return false;
+			}
+		};
+
+		auto d = (double l) {
+			switch(ct) {
+				case CellType.string_: return true;
+				case CellType.double_: return true;
+				case CellType.datetime: return !tryConvertTo!DateTime(l);
+				case CellType.date: return !tryConvertTo!Date(l);
+				case CellType.timeofday: return !tryConvertTo!TimeOfDay(l);
+				default: return false;
+			}
+		};
+
+		auto s = (string l) {
+			switch(ct) {
+				case CellType.string_: return true;
+				case CellType.bool_: return !tryConvertTo!bool(l);
+				case CellType.long_: return !tryConvertTo!long(l);
+				case CellType.double_: return !tryConvertTo!double(l);
+				case CellType.datetime: return !tryConvertTo!DateTime(l);
+				case CellType.date: return !tryConvertTo!Date(l);
+				case CellType.timeofday: return !tryConvertTo!TimeOfDay(l);
+				default: return false;
+			}
+		};
+
+		return this.value.visit!(
+				(bool l) => b(l),
+				(long lo) => l(lo),
+				(double l) => d(l),
+				(string l) => s(l),
+				(DateTime l) => dt(l),
+				(Date l) => de(l),
+				(TimeOfDay l) => tod(l),
+				() => false)
+			();
+	}
+}
+
+//
+enum CellType {
+	datetime,
+	timeofday,
+	date,
+	bool_,
+	double_,
+	long_,
+	string_
 }
 
 ///
@@ -52,14 +149,16 @@ struct Sheet {
 	Data[][] table;
 	Pos maxPos;
 
-	void printTable() {
+	string toString() {
+		import std.format : formattedWrite;
+		import std.array : appender;
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach(row; this.table) {
 			foreach(idx, Data col; row) {
 				string s = col.visit!(
 						(bool l) => to!string(l),
 						(long l) => to!string(l),
-						(double l) => to!string(l),
+						(double l) => format("%.4f", l),
 						(string l) => l,
 						(DateTime l) => l.toISOExtString(),
 						(Date l) => l.toISOExtString(),
@@ -72,22 +171,28 @@ struct Sheet {
 		}
 		maxCol[] += 1;
 
+		auto app = appender!string();
 		foreach(row; this.table) {
 			foreach(idx, Data col; row) {
 				string s = col.visit!(
 						(bool l) => to!string(l),
 						(long l) => to!string(l),
-						(double l) => to!string(l),
+						(double l) => format("%.4f", l),
 						(string l) => l,
 						(DateTime l) => l.toISOExtString(),
 						(Date l) => l.toISOExtString(),
 						(TimeOfDay l) => l.toISOExtString(),
 						() => "")
 					();
-				//writef("%*s, ", maxCol[idx], s);
+				formattedWrite(app, "%*s, ", maxCol[idx], s);
 			}
-			//writeln();
+			formattedWrite(app, "\n");
 		}
+		return app.data;
+	}
+
+	void printTable() {
+		writeln(this.toString());
 	}
 
 	// Column
@@ -426,6 +531,18 @@ Date stringToDate(string s) {
 	}
 }
 
+bool tryConvertTo(T,S)(S var) {
+	return !(tryConvertToImpl!T(Data(var)).isNull());
+}
+
+Nullable!(T) tryConvertToImpl(T)(Data var) {
+	try {
+		return nullable(convertTo!T(var));
+	} catch(Exception e) {
+		return Nullable!T();
+	}
+}
+
 T convertTo(T)(Data var) {
 	static if(is(T == Data)) {
 		return var;
@@ -439,6 +556,23 @@ T convertTo(T)(Data var) {
 				(Date l) => l.toISOExtString(),
 				(TimeOfDay l) => l.toISOExtString(),
 				() => "")
+			();
+	} else static if(is(T == bool)) {
+		if(var.type != typeid(bool) && var.type != typeid(long)
+				&& var.type == typeid(string))
+		{
+			throw new Exception("Can not convert " ~ var.type.toString() ~
+					" to bool");
+		}
+		return var.visit!(
+				(bool l) => l,
+				(long l) => l == 0 ? false : true,
+				(string l) => to!bool(l),
+				(double l) => false,
+				(DateTime l) => false,
+				(Date l) => false,
+				(TimeOfDay l) => false,
+				() => false)
 			();
 	} else static if(isIntegral!T) {
 		return var.visit!(
@@ -502,7 +636,7 @@ T convertTo(T)(Data var) {
 				() => TimeOfDay.init)
 			();
 	}
-	assert(false);
+	assert(false, T.stringof);
 }
 
 
@@ -520,13 +654,32 @@ struct SheetNameId {
 	string rid;
 }
 
+string convertToString(ubyte[] d) {
+	import std.encoding;
+	auto b = getBOM(d);
+	switch(b.schema) {
+		case BOM.none:
+			return cast(string)d;
+		case BOM.utf8:
+			return cast(string)(d[3 .. $]);
+		case BOM.utf16be: goto default;
+		case BOM.utf16le: goto default;
+		case BOM.utf32be: goto default;
+		case BOM.utf32le: goto default;
+		default:
+			string ret;
+			transcode(d, ret);
+			return ret;
+	}
+}
+
 SheetNameId[] sheetNames(string filename) {
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable wbStr = "xl/workbook.xml";
 	enforce(wbStr in ams, "No workbook found");
 	ubyte[] wb = file.expand(ams[wbStr]);
-	string wbData = cast(string)wb;
+	string wbData = convertToString(wb);
 
 	auto dom = parseDOM(wbData);
 	assert(dom.children.length == 1);
@@ -560,7 +713,7 @@ struct Relationships {
 
 Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) {
 	ubyte[] d = za.expand(am);
-	string relData = cast(string)d;
+	string relData = convertToString(d);
 	auto dom = parseDOM(relData);
 	assert(dom.children.length == 1);
 	auto rel = dom.children[0];
@@ -628,7 +781,7 @@ Sheet readSheetImpl(string filename, string rid) {
 
 Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	ubyte[] ss = za.expand(am);
-	string ssData = cast(string)ss;
+	string ssData = convertToString(ss);
 	auto dom = parseDOM(ssData);
 	Data[] ret;
 	if(dom.type != EntityType.elementStart) {
@@ -736,7 +889,7 @@ Data convert(string s) {
 Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	Cell[] ret;
 	ubyte[] ss = za.expand(am);
-	string ssData = cast(string)ss;
+	string ssData = convertToString(ss);
 	auto dom = parseDOM(ssData);
 	assert(dom.children.length == 1);
 	auto ws = dom.children[0];
@@ -886,6 +1039,7 @@ unittest {
 
 unittest {
 	import std.file : dirEntries, SpanMode;
+	import std.traits : EnumMembers;
 	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
 			.filter!(a => a.name != "xlsx_files/data03.xlsx"))
 	{
@@ -893,6 +1047,11 @@ unittest {
 		auto sn = sheetNames(de.name);
 		foreach(s; sn) {
 			auto sheet = readSheet(de.name, s.name);
+			foreach(cell; sheet.cells) {
+				foreach(T; [EnumMembers!CellType]) {
+					auto cc = cell.canConvertTo(T);
+				}
+			}
 		}
 	}
 }
