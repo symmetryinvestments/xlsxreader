@@ -2,7 +2,7 @@ module xlsxreader;
 
 import std.algorithm.iteration : filter, map, joiner;
 import std.algorithm.mutation : reverse;
-import std.algorithm.searching : all;
+import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, popFront;
 import std.ascii : isDigit;
@@ -695,7 +695,9 @@ SheetNameId[] sheetNames(string filename) {
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable wbStr = "xl/workbook.xml";
-	enforce(wbStr in ams, "No workbook found");
+	if(wbStr !in ams) {
+		return SheetNameId[].init;
+	}
 	ubyte[] wb = file.expand(ams[wbStr]);
 	string wbData = convertToString(wb);
 
@@ -759,6 +761,15 @@ Sheet readSheet(string filename, string sheetName) {
 	return readSheetImpl(filename, sRng.front.rid);
 }
 
+string eatXlPrefix(string fn) {
+	foreach(p; ["xl//", "/xl/"]) {
+		if(fn.startsWith(p)) {
+			return fn[p.length .. $];
+		}
+	}
+	return fn;
+}
+
 Sheet readSheetImpl(string filename, string rid) {
 	scope(failure) {
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
@@ -777,10 +788,11 @@ Sheet readSheetImpl(string filename, string rid) {
 	Relationships* sheetRel = rid in rels;
 	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
 				filename));
-	string fn = "xl/" ~ sheetRel.file;
+	string shrFn = eatXlPrefix(sheetRel.file);
+	string fn = "xl/" ~ shrFn;
 	ArchiveMember* sheet = fn in ams;
-	enforce(sheet !is null, format("sheetRel.file '%s' not in [%s]",
-				fn, ams.keys()));
+	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
+				sheetRel.file, fn, ams.keys()));
 
 	Sheet ret;
 	ret.cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
@@ -809,7 +821,6 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	auto sst = dom.children[0];
 	assert(sst.name == "sst");
 	auto siRng = sst.children.filter!(c => c.name == "si");
-	assert(!siRng.empty);
 	foreach(si; siRng) {
 		if(si.type != EntityType.elementStart) {
 			continue;
@@ -817,11 +828,15 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 		//ret ~= extractData(si);
 		string tmp;
 		foreach(tORr; si.children) {
-			if(tORr.name == "t" && !tORr.children.empty) {
+			if(tORr.name == "t" && tORr.type == EntityType.elementStart
+					&& !tORr.children.empty)
+			{
 				ret ~= Data(convert(tORr.children[0].text));
 			} else if(tORr.name == "r") {
 				foreach(r; tORr.children.filter!(r => r.name == "t")) {
-					tmp ~= r.children[0].text;
+					if(r.type == EntityType.elementStart && !r.children.empty) {
+						tmp ~= r.children[0].text;
+					}
 				}
 			} else {
 				ret ~= Data.init;
@@ -941,19 +956,28 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 			}
 			if(tmp.t == "s" || tmp.t == "n") {
 				auto v = c.children.filter!(c => c.name == "v");
-				enforce(!v.empty);
-				tmp.v = v.front.children[0].text;
+				//enforce(!v.empty, format("r %s", tmp.row));
+				if(!v.empty) {
+					tmp.v = v.front.children[0].text;
+				} else {
+					tmp.v = "";
+				}
 			} else if(tmp.t == "inlineStr") {
 				auto is_ = c.children.filter!(c => c.name == "is");
 				tmp.v = extractData(is_.front);
 			} else if(c.type == EntityType.elementStart) {
 				auto v = c.children.filter!(c => c.name == "v");
 				enforce(!v.empty);
-				tmp.v = v.front.children[0].text;
+				if(v.front.type == EntityType.elementStart
+						&& !v.front.children.empty
+						&& v.front.children[0].type == EntityType.elementStart)
+				{
+					tmp.v = v.front.children[0].text;
+				}
 			}
 			if(c.type == EntityType.elementStart) {
 				auto f = c.children.filter!(c => c.name == "f");
-				if(!f.empty) {
+				if(!f.empty && f.front.type == EntityType.elementStart) {
 					tmp.f = f.front.children[0].text;
 				}
 			}
@@ -964,25 +988,24 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 }
 
 Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
+	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
+	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach(ref Cell c; cells) {
-		assert(c.t == "n" || c.t == "s" || c.t == "inlineStr" || c.t == "b"
-				|| c.t.empty, format("%s", c)
-			);
+		assert(canFind(excepted, c.t) || c.t.empty,
+				format("'%s' not in [%s]", c.t, excepted));
 		if(c.t.empty) {
 			c.value = convert(c.v);
-		} else if(c.t == "n") {
-			//logf("'%s' %s", c.v, c);
-			c.value = convert(c.v);
-		} else if(c.t == "inlineStr") {
-			//logf("'%s' %s", c.v, c);
+		} else if(canFind(same, c.t)) {
 			c.value = convert(c.v);
 		} else if(c.t == "b") {
 			//logf("'%s' %s", c.v, c);
 			c.value = c.v == "1";
 		} else {
-			size_t idx = to!size_t(c.v);
-			//logf("'%s' %s", c.v, idx);
-			c.value = ss[idx];
+			if(!c.v.empty) {
+				size_t idx = to!size_t(c.v);
+				//logf("'%s' %s", c.v, idx);
+				c.value = ss[idx];
+			}
 		}
 	}
 	return cells;
