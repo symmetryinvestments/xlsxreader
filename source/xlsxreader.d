@@ -704,8 +704,10 @@ SheetNameId[] sheetNames(string filename) {
 	auto dom = parseDOM(wbData);
 	assert(dom.children.length == 1);
 	auto workbook = dom.children[0];
-	assert(workbook.name == "workbook");
-	auto sheetsRng = workbook.children.filter!(c => c.name == "sheets");
+	string sheetName = workbook.name == "workbook"
+		? "sheets" : "s:sheets";
+	assert(workbook.name == "workbook" || workbook.name == "s:workbook");
+	auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
 	assert(!sheetsRng.empty);
 	return sheetsRng.front.children
 		.map!(s => SheetNameId(
@@ -820,6 +822,9 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	assert(dom.children.length == 1);
 	auto sst = dom.children[0];
 	assert(sst.name == "sst");
+	if(sst.type != EntityType.elementStart || sst.children.empty) {
+		return ret;
+	}
 	auto siRng = sst.children.filter!(c => c.name == "si");
 	foreach(si; siRng) {
 		if(si.type != EntityType.elementStart) {
@@ -855,8 +860,12 @@ string extractData(DOMEntity!string si) {
 		if(tORr.name == "t") {
 			if(!tORr.attributes.filter!(a => a.name == "xml:space").empty) {
 				return "";
-			} else {
+			} else if(tORr.type == EntityType.elementStart
+					&& !tORr.children.empty)
+			{
 				return tORr.children[0].text;
+			} else {
+				return "";
 			}
 		} else if(tORr.name == "r") {
 			foreach(r; tORr.children.filter!(r => r.name == "t")) {
@@ -955,20 +964,23 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 				tmp.t = t.front.value;
 			}
 			if(tmp.t == "s" || tmp.t == "n") {
-				auto v = c.children.filter!(c => c.name == "v");
-				//enforce(!v.empty, format("r %s", tmp.row));
-				if(!v.empty) {
-					tmp.v = v.front.children[0].text;
-				} else {
-					tmp.v = "";
+				if(c.type == EntityType.elementStart) {
+					auto v = c.children.filter!(c => c.name == "v");
+					//enforce(!v.empty, format("r %s", tmp.row));
+					if(!v.empty && v.front.type == EntityType.elementStart
+							&& !v.front.children.empty)
+					{
+						tmp.v = v.front.children[0].text;
+					} else {
+						tmp.v = "";
+					}
 				}
 			} else if(tmp.t == "inlineStr") {
 				auto is_ = c.children.filter!(c => c.name == "is");
 				tmp.v = extractData(is_.front);
 			} else if(c.type == EntityType.elementStart) {
 				auto v = c.children.filter!(c => c.name == "v");
-				enforce(!v.empty);
-				if(v.front.type == EntityType.elementStart
+				if(!v.empty && v.front.type == EntityType.elementStart
 						&& !v.front.children.empty
 						&& v.front.children[0].type == EntityType.elementStart)
 				{
