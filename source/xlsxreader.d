@@ -321,7 +321,7 @@ struct Iterator(T) {
 ///
 struct Row(T) {
 	Sheet* sheet;
-	const size_t row;
+	/*const*/ size_t row;
 	size_t start;
 	size_t end;
 	size_t cur;
@@ -365,7 +365,7 @@ struct Row(T) {
 ///
 struct Column(T) {
 	Sheet* sheet;
-	const size_t col;
+	/*const*/ size_t col;
 	size_t start;
 	size_t end;
 	size_t cur;
@@ -1069,6 +1069,9 @@ unittest {
 
 	auto r2 = s.getRow!long(15, 1, 6);
 	assert(equal(r, expected));
+
+	auto it = s.iterateRowLong(15, 1, 6);
+	assert(equal(r2, it));
 }
 
 unittest {
