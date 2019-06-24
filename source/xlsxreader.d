@@ -981,8 +981,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 			} else if(c.type == EntityType.elementStart) {
 				auto v = c.children.filter!(c => c.name == "v");
 				if(!v.empty && v.front.type == EntityType.elementStart
-						&& !v.front.children.empty
-						&& v.front.children[0].type == EntityType.elementStart)
+						&& !v.front.children.empty)
 				{
 					tmp.v = v.front.children[0].text;
 				}
@@ -1102,7 +1101,7 @@ unittest {
 	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
 			.filter!(a => a.name != "xlsx_files/data03.xlsx"))
 	{
-		writeln(de.name);
+		//writeln(de.name);
 		auto sn = sheetNames(de.name);
 		foreach(s; sn) {
 			auto sheet = readSheet(de.name, s.name);
@@ -1113,4 +1112,20 @@ unittest {
 			}
 		}
 	}
+}
+
+unittest {
+	import std.algorithm.comparison : equal;
+	auto sheet = readSheet("testworkbook.xlsx", "ws1");
+	writefln("%(%s\n%)", sheet.cells);
+	//writeln(sheet.toString());
+	//assert(sheet.table[2][3].value.get!long() == 1337);
+
+	auto c = sheet.getColumnLong(3, 2, 5);
+	auto r = [1337, 2, 3];
+	assert(equal(c, r), format("%s", c));
+
+	auto c2 = sheet.getColumnString(4, 2, 5);
+	auto r2 = ["hello", "sil", "foo"];
+	assert(equal(c2, r2), format("%s", c2));
 }
