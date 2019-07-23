@@ -316,6 +316,10 @@ struct Iterator(T) {
 	@property T front() {
 		return this.data.front;
 	}
+
+	typeof(this) save() {
+		return this;
+	}
 }
 
 ///
@@ -346,6 +350,10 @@ struct Row(T) {
 		if(!this.empty) {
 			this.read();
 		}
+	}
+
+	typeof(this) save() {
+		return this;
 	}
 
 	private void read() {
@@ -392,6 +400,10 @@ struct Column(T) {
 		}
 	}
 
+	typeof(this) save() {
+		return this;
+	}
+
 	private void read() {
 		this.front = convertTo!T(this.sheet.table[this.cur][this.col].value);
 	}
@@ -404,6 +416,19 @@ struct Column(T) {
 		}
 		return true;
 	}
+}
+
+unittest {
+	import std.range : isForwardRange;
+	import std.meta : AliasSeq;
+	static foreach(T; AliasSeq!(long,double,DateTime,TimeOfDay,Date,string)) {{
+		alias C = Column!T;
+		alias R = Row!T;
+		alias I = Iterator!T;
+		static assert(isForwardRange!C, C.stringof);
+		static assert(isForwardRange!R, R.stringof);
+		static assert(isForwardRange!I, I.stringof);
+	}}
 }
 
 Date longToDate(long d) {
