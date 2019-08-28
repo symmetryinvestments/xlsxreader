@@ -497,7 +497,7 @@ unittest {
 }
 
 TimeOfDay doubleToTimeOfDay(double s) {
-	import std.math : lround;
+	import core.stdc.math : lround;
 	double secs = (24.0 * 60.0 * 60.0) * s;
 
 	// TODO not one-hundred my lround is needed
