@@ -130,6 +130,30 @@ struct Cell {
 				() => false)
 			();
 	}
+
+	long convertToLong() {
+		return convertTo!long(this.value);
+	}
+
+	double convertToDouble() {
+		return convertTo!long(this.value);
+	}
+
+	string convertToString() {
+		return convertTo!string(this.value);
+	}
+
+	Date convertToDate() {
+		return convertTo!Date(this.value);
+	}
+
+	TimeOfDay convertToTimeOfDay() {
+		return convertTo!TimeOfDay(this.value);
+	}
+
+	DateTime convertToDateTime() {
+		return convertTo!DateTime(this.value);
+	}
 }
 
 //
@@ -584,30 +608,6 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 	} catch(Exception e) {
 		return Nullable!T();
 	}
-}
-
-long convertToLong(Cell c) {
-	return convertTo!long(c.value);
-}
-
-double convertToDouble(Cell c) {
-	return convertTo!long(c.value);
-}
-
-string convertToString(Cell c) {
-	return convertTo!string(c.value);
-}
-
-Date convertToDate(Cell c) {
-	return convertTo!Date(c.value);
-}
-
-TimeOfDay convertToTimeOfDay(Cell c) {
-	return convertTo!TimeOfDay(c.value);
-}
-
-DateTime convertToDateTime(Cell c) {
-	return convertTo!DateTime(c.value);
 }
 
 T convertTo(T)(Data var) {
