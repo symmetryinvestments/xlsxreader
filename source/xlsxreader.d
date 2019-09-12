@@ -18,7 +18,7 @@ import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : tuple, Nullable, nullable;
 import std.utf : byChar;
-import std.variant;
+import std.variant : Algebraic, visit;
 import std.zip;
 
 import dxml.dom;
@@ -584,6 +584,30 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 	} catch(Exception e) {
 		return Nullable!T();
 	}
+}
+
+long convertToLong(Cell c) {
+	return convertTo!long(c.value);
+}
+
+double convertToDouble(Cell c) {
+	return convertTo!long(c.value);
+}
+
+string convertToString(Cell c) {
+	return convertTo!string(c.value);
+}
+
+Date convertToDate(Cell c) {
+	return convertTo!Date(c.value);
+}
+
+TimeOfDay convertToTimeOfDay(Cell c) {
+	return convertTo!TimeOfDay(c.value);
+}
+
+DateTime convertToDateTime(Cell c) {
+	return convertTo!DateTime(c.value);
 }
 
 T convertTo(T)(Data var) {
@@ -1154,6 +1178,12 @@ unittest {
 	assert(equal(c, r), format("%s", c));
 
 	auto c2 = sheet.getColumnString(4, 2, 5);
+	string f2 = sheet.table[2][4].convertToString();
+	assert(f2 == "hello", f2);
+	f2 = sheet.table[3][4].convertToString();
+	assert(f2 == "sil", f2);
+	f2 = sheet.table[4][4].convertToString();
+	assert(f2 == "foo", f2);
 	auto r2 = ["hello", "sil", "foo"];
 	assert(equal(c2, r2), format("%s", c2));
 }
