@@ -136,7 +136,7 @@ struct Cell {
 	}
 
 	double convertToDouble() {
-		return convertTo!long(this.value);
+		return convertTo!double(this.value);
 	}
 
 	string convertToString() {
