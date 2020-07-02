@@ -238,6 +238,10 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t start, size_t end) {
+		return ColumnUntyped(&this, col, start, end);
+	}
+
 	Column!(T) iterateColumn(T)(size_t col, size_t start, size_t end) {
 		return Column!(T)(&this, col, start, end);
 	}
@@ -287,6 +291,10 @@ struct Sheet {
 	{
 		import std.ascii : toUpper;
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
+	}
+
+	RowUntyped iterateRowUntyped(size_t row, size_t start, size_t end) {
+		return RowUntyped(&this, row, start, end);
 	}
 
 	Row!(T) iterateRow(T)(size_t row, size_t start, size_t end) {
@@ -347,14 +355,12 @@ struct Iterator(T) {
 }
 
 ///
-struct Row(T) {
+struct RowUntyped {
 	Sheet* sheet;
 	/*const*/ size_t row;
 	size_t start;
 	size_t end;
 	size_t cur;
-
-	T front;
 
 	this(Sheet* sheet, size_t row, size_t start, size_t end) {
 		this.sheet = sheet;
@@ -362,7 +368,6 @@ struct Row(T) {
 		this.start = start;
 		this.end = end;
 		this.cur = this.start;
-		this.read();
 	}
 
 	@property bool empty() const {
@@ -371,6 +376,34 @@ struct Row(T) {
 
 	void popFront() {
 		++this.cur;
+	}
+
+	typeof(this) save() {
+		return this;
+	}
+
+	@property Cell front() {
+		return this.sheet.table[this.row][this.cur];
+	}
+}
+
+///
+struct Row(T) {
+	RowUntyped ru;
+
+	T front;
+
+	this(Sheet* sheet, size_t row, size_t start, size_t end) {
+		this.ru = RowUntyped(sheet, row, start, end);
+		this.read();
+	}
+
+	@property bool empty() const {
+		return this.ru.empty;
+	}
+
+	void popFront() {
+		this.ru.popFront();
 		if(!this.empty) {
 			this.read();
 		}
@@ -381,12 +414,12 @@ struct Row(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.sheet.table[this.row][this.cur].value);
+		this.front = convertTo!T(this.ru.front.value);
 	}
 
 	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.start; it < this.end; ++it) {
-			if(!this.sheet.table[this.row][it].canConvertTo(ct)) {
+		for(size_t it = this.ru.start; it < this.ru.end; ++it) {
+			if(!this.ru.sheet.table[this.ru.row][it].canConvertTo(ct)) {
 				return false;
 			}
 		}
@@ -395,14 +428,12 @@ struct Row(T) {
 }
 
 ///
-struct Column(T) {
+struct ColumnUntyped {
 	Sheet* sheet;
 	/*const*/ size_t col;
 	size_t start;
 	size_t end;
 	size_t cur;
-
-	T front;
 
 	this(Sheet* sheet, size_t col, size_t start, size_t end) {
 		this.sheet = sheet;
@@ -410,7 +441,6 @@ struct Column(T) {
 		this.start = start;
 		this.end = end;
 		this.cur = this.start;
-		this.read();
 	}
 
 	@property bool empty() const {
@@ -419,6 +449,34 @@ struct Column(T) {
 
 	void popFront() {
 		++this.cur;
+	}
+
+	typeof(this) save() {
+		return this;
+	}
+
+	@property Cell front() {
+		return this.sheet.table[this.cur][this.col];
+	}
+}
+
+///
+struct Column(T) {
+	ColumnUntyped cu;
+
+	T front;
+
+	this(Sheet* sheet, size_t col, size_t start, size_t end) {
+		this.cu = ColumnUntyped(sheet, col, start, end);
+		this.read();
+	}
+
+	@property bool empty() const {
+		return this.cu.empty;
+	}
+
+	void popFront() {
+		this.cu.popFront();
 		if(!this.empty) {
 			this.read();
 		}
@@ -429,12 +487,12 @@ struct Column(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.sheet.table[this.cur][this.col].value);
+		this.front = convertTo!T(this.cu.front.value);
 	}
 
 	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.start; it < this.end; ++it) {
-			if(!this.sheet.table[it][this.col].canConvertTo(ct)) {
+		for(size_t it = this.cu.start; it < this.cu.end; ++it) {
+			if(!this.cu.sheet.table[it][this.cu.col].canConvertTo(ct)) {
 				return false;
 			}
 		}
@@ -1121,6 +1179,10 @@ unittest {
 
 	auto it = s.iterateRowLong(15, 1, 6);
 	assert(equal(r2, it));
+
+	auto it2 = s.iterateRowUntyped(15, 1, 6)
+		.map!(it => format("%s", it))
+		.array;
 }
 
 unittest {
@@ -1128,6 +1190,10 @@ unittest {
 	auto s = readSheet("multitable.xlsx", "wb2");
 	writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!Date(1, 1, 6);
+	auto rsltUt = s.iterateColumnUntyped(1, 1, 6)
+		.map!(it => format("%s", it))
+		.array;
+	assert(!rsltUt.empty);
 
 	auto target = [Date(2019,5,01), Date(2016,12,27), Date(1976,7,23),
 		 Date(1986,7,2), Date(2038,1,19)
