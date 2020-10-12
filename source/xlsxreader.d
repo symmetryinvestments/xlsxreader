@@ -675,7 +675,7 @@ T convertTo(T)(Data var) {
 		return var.visit!(
 				(bool l) => to!string(l),
 				(long l) => to!string(l),
-				(double l) => to!string(l),
+				(double l) => format("%f", l),
 				(string l) => l,
 				(DateTime l) => l.toISOExtString(),
 				(Date l) => l.toISOExtString(),
@@ -1188,7 +1188,7 @@ unittest {
 unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb2");
-	writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
+	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!Date(1, 1, 6);
 	auto rsltUt = s.iterateColumnUntyped(1, 1, 6)
 		.map!(it => format("%s", it))
@@ -1235,7 +1235,7 @@ unittest {
 unittest {
 	import std.algorithm.comparison : equal;
 	auto sheet = readSheet("testworkbook.xlsx", "ws1");
-	writefln("%(%s\n%)", sheet.cells);
+	//writefln("%(%s\n%)", sheet.cells);
 	//writeln(sheet.toString());
 	//assert(sheet.table[2][3].value.get!long() == 1337);
 
@@ -1252,4 +1252,15 @@ unittest {
 	assert(f2 == "foo", f2);
 	auto r2 = ["hello", "sil", "foo"];
 	assert(equal(c2, r2), format("%s", c2));
+}
+
+unittest {
+	import std.math : approxEqual;
+	auto sheet = readSheet("toto.xlsx", "Trades");
+	writefln("%(%s\n%)", sheet.cells);
+
+	auto r = sheet.getRowString(1, 0, 2).array;
+
+	double d = to!double(r[1]);
+	assert(approxEqual(d, 38204642.510000));
 }
