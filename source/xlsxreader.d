@@ -91,6 +91,7 @@ struct Cell {
 				case CellType.long_: return true;
 				case CellType.string_: return true;
 				case CellType.double_: return true;
+				case CellType.bool_: return l == 0 || l == 1;
 				default: return false;
 			}
 		};
@@ -129,6 +130,10 @@ struct Cell {
 				(TimeOfDay l) => tod(l),
 				() => false)
 			();
+	}
+
+	bool convertToBool() {
+		return convertTo!bool(this.value);
 	}
 
 	long convertToLong() {
@@ -993,7 +998,7 @@ private bool canConvertToLong(string s) {
 	return s.byChar.all!isDigit();
 }
 
-private immutable rs = r"[0-9][0-9]*\.[0-9]*";
+private immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
 private auto rgx = ctRegex!rs;
 
 private bool canConvertToDouble(string s) {
@@ -1160,6 +1165,10 @@ unittest {
 	assert(approxEqual(r.table[12][5].value.get!double(), 26.74),
 			format("%s", r.table[12][5])
 		);
+
+	assert(approxEqual(r.table[13][5].value.get!double(), -26.74),
+			format("%s", r.table[13][5])
+		);
 }
 
 unittest {
@@ -1210,7 +1219,10 @@ unittest {
 unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
-	assert(s.table[0][0].value.peek!bool());
+	writeln(s.table[0][0].value.type());
+	assert(s.table[0][0].value.peek!long(),
+			format("%s", s.table[0][0].value));
+	assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
 unittest {
