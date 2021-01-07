@@ -172,6 +172,7 @@ enum CellType {
 	string_
 }
 
+import std.ascii : toUpper;
 ///
 struct Sheet {
 	Cell[] cells;
@@ -239,7 +240,6 @@ struct Sheet {
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
 			"DateTime"])
 	{
-		import std.ascii : toUpper;
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
@@ -294,7 +294,6 @@ struct Sheet {
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
 			"DateTime"])
 	{
-		import std.ascii : toUpper;
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
