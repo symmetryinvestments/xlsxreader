@@ -132,31 +132,31 @@ struct Cell {
 			();
 	}
 
-	bool convertToBool() const {
+	bool convertToBool() @trusted const {
 		return convertTo!bool(this.value);
 	}
 
-	long convertToLong() const {
+	long convertToLong() @trusted const {
 		return convertTo!long(this.value);
 	}
 
-	double convertToDouble() const {
+	double convertToDouble() @trusted const {
 		return convertTo!double(this.value);
 	}
 
-	string convertToString() const {
+	string convertToString() @trusted const {
 		return convertTo!string(this.value);
 	}
 
-	Date convertToDate() const {
+	Date convertToDate() @trusted const {
 		return convertTo!Date(this.value);
 	}
 
-	TimeOfDay convertToTimeOfDay() const {
+	TimeOfDay convertToTimeOfDay() @trusted const {
 		return convertTo!TimeOfDay(this.value);
 	}
 
-	DateTime convertToDateTime() const {
+	DateTime convertToDateTime() @trusted const {
 		return convertTo!DateTime(this.value);
 	}
 }
