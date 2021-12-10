@@ -13,3 +13,4 @@ xlsxreader-test-*
 *.o
 *.obj
 *.lst
+libxlsxreader.a
