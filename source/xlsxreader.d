@@ -132,31 +132,31 @@ struct Cell {
 			();
 	}
 
-	bool convertToBool() {
+	bool convertToBool() const {
 		return convertTo!bool(this.value);
 	}
 
-	long convertToLong() {
+	long convertToLong() const {
 		return convertTo!long(this.value);
 	}
 
-	double convertToDouble() {
+	double convertToDouble() const {
 		return convertTo!double(this.value);
 	}
 
-	string convertToString() {
+	string convertToString() const {
 		return convertTo!string(this.value);
 	}
 
-	Date convertToDate() {
+	Date convertToDate() const {
 		return convertTo!Date(this.value);
 	}
 
-	TimeOfDay convertToTimeOfDay() {
+	TimeOfDay convertToTimeOfDay() const {
 		return convertTo!TimeOfDay(this.value);
 	}
 
-	DateTime convertToDateTime() {
+	DateTime convertToDateTime() const {
 		return convertTo!DateTime(this.value);
 	}
 }
@@ -783,7 +783,7 @@ struct SheetNameId {
 	string rid;
 }
 
-string convertToString(ubyte[] d) {
+string convertToString(const ubyte[] d) {
 	import std.encoding;
 	auto b = getBOM(d);
 	switch(b.schema) {
