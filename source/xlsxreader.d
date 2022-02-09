@@ -281,6 +281,11 @@ struct Sheet {
 
 	// Row
 
+	Iterator!T getRow(T)(size_t row, size_t start) {
+		auto c = this.iterateRow!T(row, start, start + 1);
+		return Iterator!T(c.array);
+	}
+
 	Iterator!T getRow(T)(size_t row, size_t start, size_t end) {
 		auto c = this.iterateRow!T(row, start, end);
 		return Iterator!T(c.array);
