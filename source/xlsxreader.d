@@ -227,14 +227,14 @@ struct Sheet {
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t start, size_t end) {
-		auto c = this.iterateColumn!T(col, start, end);
+	Iterator!T getColumn(T)(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		auto c = this.iterateColumn!T(col, startColumn, endColumn);
 		return Iterator!T(c.array);
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t start, size_t end) {
-		return getColumn!(%1$s)(col, start, end);
+	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return getColumn!(%1$s)(col, startColumn, endColumn);
 	}
 	};
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
@@ -243,57 +243,50 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t start, size_t end) {
-		return ColumnUntyped(&this, col, start, end);
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return ColumnUntyped(&this, col, startColumn, endColumn);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t start, size_t end) {
-		return Column!(T)(&this, col, start, end);
+	Column!(T) iterateColumn(T)(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Column!(T)(&this, col, startColumn, endColumn);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t start, size_t end) {
-		return Column!(long)(&this, col, start, end);
+	Column!(long) iterateColumnLong(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Column!(long)(&this, col, startColumn, endColumn);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t start, size_t end) {
-		return Column!(double)(&this, col, start, end);
+	Column!(double) iterateColumnDouble(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Column!(double)(&this, col, startColumn, endColumn);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t start, size_t end) {
-		return Column!(string)(&this, col, start, end);
+	Column!(string) iterateColumnString(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Column!(string)(&this, col, startColumn, endColumn);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t start,
-			size_t end)
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max)
 	{
-		return Column!(DateTime)(&this, col, start, end);
+		return Column!(DateTime)(&this, col, startColumn, endColumn);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t start, size_t end) {
-		return Column!(Date)(&this, col, start, end);
+	Column!(Date) iterateColumnDate(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Column!(Date)(&this, col, startColumn, endColumn);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t start,
-			size_t end)
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max)
 	{
-		return Column!(TimeOfDay)(&this, col, start, end);
+		return Column!(TimeOfDay)(&this, col, startColumn, endColumn);
 	}
 
 	// Row
 
-	Iterator!T getRow(T)(size_t row, size_t start) {
-		auto c = this.iterateRow!T(row, start, start + 1);
-		return Iterator!T(c.array);
-	}
-
-	Iterator!T getRow(T)(size_t row, size_t start, size_t end) {
-		auto c = this.iterateRow!T(row, start, end);
+	Iterator!T getRow(T)(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		auto c = this.iterateRow!T(row, startColumn, endColumn);
 		return Iterator!T(c.array);
 	}
 
 	private enum t2 = q{
-	Iterator!(%1$s) getRow%2$s(size_t row, size_t start, size_t end) {
-		return getRow!(%1$s)(row, start, end);
+	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
@@ -302,40 +295,38 @@ struct Sheet {
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	RowUntyped iterateRowUntyped(size_t row, size_t start, size_t end) {
-		return RowUntyped(&this, row, start, end);
+	RowUntyped iterateRowUntyped(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return RowUntyped(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t start, size_t end) {
-		return Row!(T)(&this, row, start, end);
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Row!(T)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(long) iterateRowLong(size_t row, size_t start, size_t end) {
-		return Row!(long)(&this, row, start, end);
+	Row!(long) iterateRowLong(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Row!(long)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(double) iterateRowDouble(size_t row, size_t start, size_t end) {
-		return Row!(double)(&this, row, start, end);
+	Row!(double) iterateRowDouble(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Row!(double)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(string) iterateRowString(size_t row, size_t start, size_t end) {
-		return Row!(string)(&this, row, start, end);
+	Row!(string) iterateRowString(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Row!(string)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(DateTime) iterateRowDateTime(size_t row, size_t start,
-			size_t end)
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max)
 	{
-		return Row!(DateTime)(&this, row, start, end);
+		return Row!(DateTime)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(Date) iterateRowDate(size_t row, size_t start, size_t end) {
-		return Row!(Date)(&this, row, start, end);
+	Row!(Date) iterateRowDate(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		return Row!(Date)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t start,
-			size_t end)
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max)
 	{
-		return Row!(TimeOfDay)(&this, row, start, end);
+		return Row!(TimeOfDay)(&this, row, startColumn, endColumn);
 	}
 }
 
@@ -367,20 +358,20 @@ struct Iterator(T) {
 struct RowUntyped {
 	Sheet* sheet;
 	/*const*/ size_t row;
-	size_t start;
-	size_t end;
+	size_t startColumn;
+	size_t endColumn;
 	size_t cur;
 
-	this(Sheet* sheet, size_t row, size_t start, size_t end) {
+	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
 		this.sheet = sheet;
 		this.row = row;
-		this.start = start;
-		this.end = end;
-		this.cur = this.start;
+		this.startColumn = startColumn;
+		this.endColumn = endColumn;
+		this.cur = this.startColumn;
 	}
 
 	@property bool empty() const {
-		return this.cur >= this.end;
+		return this.cur >= this.endColumn;
 	}
 
 	void popFront() {
@@ -402,8 +393,8 @@ struct Row(T) {
 
 	T front;
 
-	this(Sheet* sheet, size_t row, size_t start, size_t end) {
-		this.ru = RowUntyped(sheet, row, start, end);
+	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
+		this.ru = RowUntyped(sheet, row, startColumn, endColumn);
 		this.read();
 	}
 
@@ -427,7 +418,7 @@ struct Row(T) {
 	}
 
 	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.ru.start; it < this.ru.end; ++it) {
+		for(size_t it = this.ru.startColumn; it < this.ru.endColumn; ++it) {
 			if(!this.ru.sheet.table[this.ru.row][it].canConvertTo(ct)) {
 				return false;
 			}
@@ -440,20 +431,20 @@ struct Row(T) {
 struct ColumnUntyped {
 	Sheet* sheet;
 	/*const*/ size_t col;
-	size_t start;
-	size_t end;
+	size_t startRow;
+	size_t endRow;
 	size_t cur;
 
-	this(Sheet* sheet, size_t col, size_t start, size_t end) {
+	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) {
 		this.sheet = sheet;
 		this.col = col;
-		this.start = start;
-		this.end = end;
-		this.cur = this.start;
+		this.startRow = startRow;
+		this.endRow = endRow;
+		this.cur = this.startRow;
 	}
 
 	@property bool empty() const {
-		return this.cur >= this.end;
+		return this.cur >= this.endRow;
 	}
 
 	void popFront() {
@@ -475,8 +466,8 @@ struct Column(T) {
 
 	T front;
 
-	this(Sheet* sheet, size_t col, size_t start, size_t end) {
-		this.cu = ColumnUntyped(sheet, col, start, end);
+	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) {
+		this.cu = ColumnUntyped(sheet, col, startRow, endRow);
 		this.read();
 	}
 
@@ -500,7 +491,7 @@ struct Column(T) {
 	}
 
 	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.cu.start; it < this.cu.end; ++it) {
+		for(size_t it = this.cu.startRow; it < this.cu.endRow; ++it) {
 			if(!this.cu.sheet.table[it][this.cu.col].canConvertTo(ct)) {
 				return false;
 			}
