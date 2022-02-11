@@ -6,7 +6,6 @@ import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, popFront;
 import std.ascii : isDigit;
-import std.experimental.logger;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
