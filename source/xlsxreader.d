@@ -430,16 +430,16 @@ struct Row(T) {
 ///
 struct ColumnUntyped {
 	Sheet* sheet;
-	/*const*/ size_t col;
-	size_t startRow;
-	size_t endRow;
+	const size_t col;
+	const size_t startRow;
+	const size_t endRow;
 	size_t cur;
 
-	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) {
+	this(Sheet* sheet, size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
 		this.sheet = sheet;
 		this.col = col;
 		this.startRow = startRow;
-		this.endRow = endRow;
+		this.endRow = endRow != size_t.max ? endRow : sheet.table.length;
 		this.cur = this.startRow;
 	}
 
@@ -466,7 +466,7 @@ struct Column(T) {
 
 	T front;
 
-	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) {
+	this(Sheet* sheet, size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
 		this.cu = ColumnUntyped(sheet, col, startRow, endRow);
 		this.read();
 	}
