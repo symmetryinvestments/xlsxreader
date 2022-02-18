@@ -350,7 +350,7 @@ struct Iterator(T) {
 		return this.data.front;
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 }
@@ -409,7 +409,7 @@ struct Row(T) {
 		}
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 
@@ -451,7 +451,7 @@ struct ColumnUntyped {
 		++this.cur;
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 
@@ -482,7 +482,7 @@ struct Column(T) {
 		}
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 
