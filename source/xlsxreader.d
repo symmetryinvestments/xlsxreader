@@ -393,9 +393,9 @@ struct Row(T) {
 	RowUntyped ru;
 	T front;
 
-	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
-		this.ru = RowUntyped(sheet, row, startColumn, endColumn);
-		this.read();
+	this(Sheet* sheet, size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+		ru = RowUntyped(sheet, row, startColumn, endColumn);
+		read();
 	}
 
 	@property bool empty() const pure nothrow @nogc {
