@@ -338,7 +338,7 @@ struct Iterator(T) {
 		this.data = data;
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.data.empty;
 	}
 
@@ -391,7 +391,6 @@ struct RowUntyped {
 ///
 struct Row(T) {
 	RowUntyped ru;
-
 	T front;
 
 	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
@@ -399,7 +398,7 @@ struct Row(T) {
 		this.read();
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.ru.empty;
 	}
 
@@ -444,7 +443,7 @@ struct ColumnUntyped {
 		this.cur = this.startRow;
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.cur >= this.endRow;
 	}
 
@@ -472,7 +471,7 @@ struct Column(T) {
 		this.read();
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.cu.empty;
 	}
 
