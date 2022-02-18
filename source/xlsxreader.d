@@ -358,32 +358,32 @@ struct Iterator(T) {
 ///
 struct RowUntyped {
 	Sheet* sheet;
-	/*const*/ size_t row;
-	size_t startColumn;
-	size_t endColumn;
+	const size_t row;
+	const size_t startColumn;
+	const size_t endColumn;
 	size_t cur;
 
-	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
+	this(Sheet* sheet, in size_t row, in size_t startColumn = 0, in size_t endColumn = size_t.max) pure nothrow @nogc {
 		this.sheet = sheet;
 		this.row = row;
 		this.startColumn = startColumn;
-		this.endColumn = endColumn;
+		this.endColumn = endColumn != size_t.max ? endColumn : sheet.table[row].length;
 		this.cur = this.startColumn;
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.cur >= this.endColumn;
 	}
 
-	void popFront() {
+	void popFront() pure nothrow @nogc {
 		++this.cur;
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 
-	@property Cell front() {
+	@property inout(Cell) front() inout pure nothrow @nogc {
 		return this.sheet.table[this.row][this.cur];
 	}
 }
