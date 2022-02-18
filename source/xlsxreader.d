@@ -22,6 +22,8 @@ import std.zip;
 
 import dxml.dom;
 
+@safe:
+
 ///
 struct Pos {
 	// zero based
@@ -44,7 +46,7 @@ struct Cell {
 	Data value;
 	Pos position;
 
-	bool canConvertTo(CellType ct) const {
+	bool canConvertTo(CellType ct) const @trusted {
 		auto b = (bool l) {
 			switch(ct) {
 				case CellType.datetime: return false;
@@ -178,7 +180,7 @@ struct Sheet {
 	Cell[][] table;
 	Pos maxPos;
 
-	string toString() {
+	string toString() @trusted {
 		import std.format : formattedWrite;
 		import std.array : appender;
 		long[] maxCol = new long[](maxPos.col + 1);
@@ -655,7 +657,7 @@ Date stringToDate(string s) {
 	}
 }
 
-bool tryConvertTo(T,S)(S var) {
+bool tryConvertTo(T,S)(S var) @trusted {
 	return !(tryConvertToImpl!T(Data(var)).isNull());
 }
 
@@ -667,7 +669,7 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 	}
 }
 
-T convertTo(T)(Data var) {
+ T convertTo(T)(Data var) @trusted {
 	static if(is(T == Data)) {
 		return var;
 	} else static if(isSomeString!T) {
@@ -764,12 +766,9 @@ T convertTo(T)(Data var) {
 }
 
 
-private ZipArchive readFile(string filename) {
-	enforce(exists(filename), "File with name " ~ filename ~ " does not
-			exist");
-
-	auto file = new ZipArchive(read(filename));
-	return file;
+private ZipArchive readFile(string filename) @trusted {
+	enforce(exists(filename), "File with name " ~ filename ~ " does not exist");
+	return new typeof(return)(read(filename));
 }
 
 struct SheetNameId {
@@ -778,7 +777,7 @@ struct SheetNameId {
 	string rid;
 }
 
-string convertToString(const ubyte[] d) {
+string convertToString(const ubyte[] d) @trusted {
 	import std.encoding;
 	auto b = getBOM(d);
 	switch(b.schema) {
@@ -797,7 +796,7 @@ string convertToString(const ubyte[] d) {
 	}
 }
 
-SheetNameId[] sheetNames(string filename) {
+SheetNameId[] sheetNames(string filename) @trusted {
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable wbStr = "xl/workbook.xml";
@@ -839,7 +838,7 @@ struct Relationships {
 	string file;
 }
 
-Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) {
+Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
 	ubyte[] d = za.expand(am);
 	string relData = convertToString(d);
 	auto dom = parseDOM(relData);
@@ -878,7 +877,7 @@ string eatXlPrefix(string fn) {
 	return fn;
 }
 
-Sheet readSheetImpl(string filename, string rid) {
+Sheet readSheetImpl(string filename, string rid) @trusted {
 	scope(failure) {
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	}
@@ -917,7 +916,7 @@ Sheet readSheetImpl(string filename, string rid) {
 	return ret;
 }
 
-Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
+Data[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 	ubyte[] ss = za.expand(am);
 	string ssData = convertToString(ss);
 	auto dom = parseDOM(ssData);
@@ -1000,7 +999,7 @@ private bool canConvertToDouble(string s) {
 	return cap.empty || cap.front.hit != s ? false : true;
 }
 
-Data convert(string s) {
+Data convert(string s) @trusted {
 	struct ToRe {
 		string from;
 		string to;
@@ -1034,7 +1033,7 @@ Data convert(string s) {
 	}
 }
 
-Cell[] readCells(ZipArchive za, ArchiveMember am) {
+Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 	Cell[] ret;
 	ubyte[] ss = za.expand(am);
 	string ssData = convertToString(ss);
@@ -1104,7 +1103,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	return ret;
 }
 
-Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
+Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) @trusted {
 	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
 	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach(ref Cell c; cells) {
@@ -1153,7 +1152,7 @@ Pos elementMax(Pos a, Pos b) {
 			a.col < b.col ? b.col : a.col);
 }
 
-unittest {
+@trusted unittest {
 	import std.math : approxEqual;
 	auto r = readSheet("multitable.xlsx", "wb1");
 	assert(approxEqual(r.table[12][5].value.get!double(), 26.74),
@@ -1165,7 +1164,7 @@ unittest {
 		);
 }
 
-unittest {
+@trusted unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
@@ -1188,7 +1187,7 @@ unittest {
 		.array;
 }
 
-unittest {
+@trusted unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb2");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
@@ -1210,7 +1209,7 @@ unittest {
 	assert(equal(rslt, it2));
 }
 
-unittest {
+@trusted unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
 	writeln(s.table[0][0].value.type());
@@ -1219,7 +1218,7 @@ unittest {
 	assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
-unittest {
+@trusted unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
 	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
@@ -1260,7 +1259,7 @@ unittest {
 	assert(equal(c2, r2), format("%s", c2));
 }
 
-unittest {
+@trusted unittest {
 	import std.math : approxEqual;
 	auto sheet = readSheet("toto.xlsx", "Trades");
 	writefln("%(%s\n%)", sheet.cells);
