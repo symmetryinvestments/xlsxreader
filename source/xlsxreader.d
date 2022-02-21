@@ -364,10 +364,11 @@ struct RowUntyped {
 	size_t cur;
 
 	this(Sheet* sheet, in size_t row, in size_t startColumn = 0, in size_t endColumn = size_t.max) pure nothrow @nogc {
+		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.row = row;
 		this.startColumn = startColumn;
-		this.endColumn = endColumn != size_t.max ? endColumn : sheet.table[row].length;
+		this.endColumn = endColumn != size_t.max ? endColumn : sheet.maxPos.col + 1;
 		this.cur = this.startColumn;
 	}
 
@@ -436,10 +437,11 @@ struct ColumnUntyped {
 	size_t cur;
 
 	this(Sheet* sheet, size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.col = col;
 		this.startRow = startRow;
-		this.endRow = endRow != size_t.max ? endRow : sheet.table.length;
+		this.endRow = endRow != size_t.max ? endRow : sheet.maxPos.row + 1;
 		this.cur = this.startRow;
 	}
 
@@ -912,6 +914,7 @@ Sheet readSheetImpl(string filename, string rid) @trusted {
 	foreach(c; ret.cells) {
 		ret.table[c.position.row][c.position.col] = c;
 	}
+	// debug writeln("xlsxreader: sheet members: cells.length:", ret.cells.length, " table.length:", ret.table.length, " table[0].length:", ret.table[0].length, " ret.maxPos:", ret.maxPos);
 	return ret;
 }
 
