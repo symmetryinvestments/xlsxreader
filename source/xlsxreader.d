@@ -354,7 +354,10 @@ struct Iterator(T) {
 		return this;
 	}
 
-	alias data this;
+	// Request random access.
+	inout(T)[] array() inout @safe pure nothrow @nogc {
+		return data;
+	}
 }
 
 ///
