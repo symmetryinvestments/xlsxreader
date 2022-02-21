@@ -1,3 +1,4 @@
+// TODO: add const access to getter functions, such as `getRow`
 module xlsxreader;
 
 import std.algorithm.iteration : filter, map, joiner;
@@ -282,7 +283,7 @@ struct Sheet {
 
 	Iterator!T getRow(T)(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
 		auto c = this.iterateRow!T(row, startColumn, endColumn);
-		return Iterator!T(c.array);
+		return Iterator!T(c.array); // TODO: why .array?
 	}
 
 	private enum t2 = q{
