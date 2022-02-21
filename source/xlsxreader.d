@@ -353,6 +353,8 @@ struct Iterator(T) {
 	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
+
+	alias data this;
 }
 
 ///
