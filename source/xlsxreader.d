@@ -369,7 +369,7 @@ struct RowUntyped {
 	const size_t endColumn;
 	size_t cur;
 
-	this(Sheet* sheet, in size_t row, in size_t startColumn = 0, in size_t endColumn = size_t.max) pure nothrow @nogc {
+	this(Sheet* sheet, size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) pure nothrow @nogc {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.row = row;
