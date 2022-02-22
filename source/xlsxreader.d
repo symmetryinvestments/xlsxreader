@@ -181,7 +181,7 @@ struct Sheet {
 	Cell[][] table;
 	Pos maxPos;
 
-	string toString() @trusted {
+	string toString() const @trusted {
 		import std.format : formattedWrite;
 		import std.array : appender;
 		long[] maxCol = new long[](maxPos.col + 1);
@@ -223,7 +223,7 @@ struct Sheet {
 		return app.data;
 	}
 
-	void printTable() {
+	void printTable() const {
 		writeln(this.toString());
 	}
 
@@ -676,104 +676,103 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 	}
 }
 
- T convertTo(T)(Data var) @trusted {
+T convertTo(T)(in Data var) @trusted {
 	static if(is(T == Data)) {
 		return var;
 	} else static if(isSomeString!T) {
 		return var.visit!(
-				(bool l) => to!string(l),
-				(long l) => to!string(l),
-				(double l) => format("%f", l),
-				(string l) => l,
-				(DateTime l) => l.toISOExtString(),
-				(Date l) => l.toISOExtString(),
-				(TimeOfDay l) => l.toISOExtString(),
-				() => "")
-			();
+			(bool l) => to!string(l),
+			(long l) => to!string(l),
+			(double l) => format("%f", l),
+			(string l) => l,
+			(DateTime l) => l.toISOExtString(),
+			(Date l) => l.toISOExtString(),
+			(TimeOfDay l) => l.toISOExtString(),
+			() => "")
+		();
 	} else static if(is(T == bool)) {
 		if(var.type != typeid(bool) && var.type != typeid(long)
-				&& var.type == typeid(string))
+		   && var.type == typeid(string))
 		{
 			throw new Exception("Can not convert " ~ var.type.toString() ~
-					" to bool");
+								" to bool");
 		}
 		return var.visit!(
-				(bool l) => l,
-				(long l) => l == 0 ? false : true,
-				(string l) => to!bool(l),
-				(double l) => false,
-				(DateTime l) => false,
-				(Date l) => false,
-				(TimeOfDay l) => false,
-				() => false)
-			();
+			(bool l) => l,
+			(long l) => l == 0 ? false : true,
+			(string l) => to!bool(l),
+			(double l) => false,
+			(DateTime l) => false,
+			(Date l) => false,
+			(TimeOfDay l) => false,
+			() => false)
+		();
 	} else static if(isIntegral!T) {
 		return var.visit!(
-				(bool l) => to!T(l),
-				(long l) => to!T(l),
-				(double l) => to!T(l),
-				(string l) => to!T(l),
-				(DateTime l) => to!T(dateToLong(l.date)),
-				(Date l) => to!T(dateToLong(l)),
-				(TimeOfDay l) => to!T(0),
-				() => to!T(0))
-			();
+			(bool l) => to!T(l),
+			(long l) => to!T(l),
+			(double l) => to!T(l),
+			(string l) => to!T(l),
+			(DateTime l) => to!T(dateToLong(l.date)),
+			(Date l) => to!T(dateToLong(l)),
+			(TimeOfDay l) => to!T(0),
+			() => to!T(0))
+		();
 	} else static if(isFloatingPoint!T) {
 		return var.visit!(
-				(bool l) => to!T(l),
-				(long l) => to!T(l),
-				(double l) => to!T(l),
-				(string l) => to!T(l),
-				(DateTime l) => to!T(dateToLong(l.date)),
-				(Date l) => to!T(dateToLong(l)),
-				(TimeOfDay l) => to!T(0),
-				() => T.init)
-			();
+			(bool l) => to!T(l),
+			(long l) => to!T(l),
+			(double l) => to!T(l),
+			(string l) => to!T(l),
+			(DateTime l) => to!T(dateToLong(l.date)),
+			(Date l) => to!T(dateToLong(l)),
+			(TimeOfDay l) => to!T(0),
+			() => T.init)
+		();
 	} else static if(is(T == DateTime)) {
 		return var.visit!(
-				(bool l) => DateTime.init,
-				(long l) => doubleToDateTime(to!long(l)),
-				(double l) => doubleToDateTime(l),
-				(string l) => doubleToDateTime(to!double(l)),
-				(DateTime l) => l,
-				(Date l) => DateTime(l, TimeOfDay.init),
-				(TimeOfDay l) => DateTime(Date.init, l),
-				() => DateTime.init)
-			();
+			(bool l) => DateTime.init,
+			(long l) => doubleToDateTime(to!long(l)),
+			(double l) => doubleToDateTime(l),
+			(string l) => doubleToDateTime(to!double(l)),
+			(DateTime l) => l,
+			(Date l) => DateTime(l, TimeOfDay.init),
+			(TimeOfDay l) => DateTime(Date.init, l),
+			() => DateTime.init)
+		();
 	} else static if(is(T == Date)) {
 		import std.math : lround;
 
 		return var.visit!(
-				(bool l) => Date.init,
-				(long l) => longToDate(l),
-				(double l) => longToDate(lround(l)),
-				(string l) => stringToDate(l),
-				(DateTime l) => l.date,
-				(Date l) => l,
-				(TimeOfDay l) => Date.init,
-				() => Date.init)
-			();
+			(bool l) => Date.init,
+			(long l) => longToDate(l),
+			(double l) => longToDate(lround(l)),
+			(string l) => stringToDate(l),
+			(DateTime l) => l.date,
+			(Date l) => l,
+			(TimeOfDay l) => Date.init,
+			() => Date.init)
+		();
 	} else static if(is(T == TimeOfDay)) {
 		import std.math : lround;
 
 		return var.visit!(
-				(bool l) => TimeOfDay.init,
-				(long l) => TimeOfDay.init,
-				(double l) => doubleToTimeOfDay(l - cast(long)l),
-				(string l) => doubleToTimeOfDay(
-						to!double(l) - cast(long)to!double(l)
-					),
-				(DateTime l) => l.timeOfDay,
-				(Date l) => TimeOfDay.init,
-				(TimeOfDay l) => l,
-				() => TimeOfDay.init)
-			();
+			(bool l) => TimeOfDay.init,
+			(long l) => TimeOfDay.init,
+			(double l) => doubleToTimeOfDay(l - cast(long)l),
+			(string l) => doubleToTimeOfDay(
+				to!double(l) - cast(long)to!double(l)
+			),
+			(DateTime l) => l.timeOfDay,
+			(Date l) => TimeOfDay.init,
+			(TimeOfDay l) => l,
+			() => TimeOfDay.init)
+		();
 	}
 	assert(false, T.stringof);
 }
 
-
-private ZipArchive readFile(string filename) @trusted {
+private ZipArchive readFile(in string filename) @trusted {
 	enforce(exists(filename), "File with name " ~ filename ~ " does not exist");
 	return new typeof(return)(read(filename));
 }
@@ -784,7 +783,7 @@ struct SheetNameId {
 	string rid;
 }
 
-string convertToString(const ubyte[] d) @trusted {
+string convertToString(in ubyte[] d) @trusted {
 	import std.encoding;
 	auto b = getBOM(d);
 	switch(b.schema) {
@@ -803,7 +802,7 @@ string convertToString(const ubyte[] d) @trusted {
 	}
 }
 
-SheetNameId[] sheetNames(string filename) @trusted {
+SheetNameId[] sheetNames(in string filename) @trusted {
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable wbStr = "xl/workbook.xml";
@@ -867,7 +866,7 @@ Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trust
 	return ret;
 }
 
-Sheet readSheet(string filename, string sheetName) {
+Sheet readSheet(in string filename, in string sheetName) {
 	SheetNameId[] sheets = sheetNames(filename);
 	auto sRng = sheets.filter!(s => s.name == sheetName);
 	enforce(!sRng.empty, "No sheet with name " ~ sheetName
@@ -884,7 +883,7 @@ string eatXlPrefix(string fn) {
 	return fn;
 }
 
-Sheet readSheetImpl(string filename, string rid) @trusted {
+Sheet readSheetImpl(in string filename, in string rid) @trusted {
 	scope(failure) {
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	}
@@ -992,7 +991,7 @@ string extractData(DOMEntity!string si) {
 	assert(false);
 }
 
-private bool canConvertToLong(string s) {
+private bool canConvertToLong(in string s) {
 	if(s.empty) {
 		return false;
 	}
@@ -1002,12 +1001,12 @@ private bool canConvertToLong(string s) {
 private immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
 private auto rgx = ctRegex!rs;
 
-private bool canConvertToDouble(string s) {
+private bool canConvertToDouble(in string s) {
 	auto cap = matchAll(s, rgx);
 	return cap.empty || cap.front.hit != s ? false : true;
 }
 
-Data convert(string s) @trusted {
+Data convert(in string s) @trusted {
 	struct ToRe {
 		string from;
 		string to;
@@ -1135,7 +1134,7 @@ Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) @trusted {
 	return cells;
 }
 
-Pos toPos(string s) {
+Pos toPos(in string s) {
 	import std.string : indexOfAny;
 	import std.math : pow;
 	ptrdiff_t fn = s.indexOfAny("0123456789");
