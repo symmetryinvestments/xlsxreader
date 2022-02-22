@@ -229,14 +229,14 @@ struct Sheet {
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		auto c = this.iterateColumn!T(col, startColumn, endColumn);
+	Iterator!T getColumn(T)(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		auto c = this.iterateColumn!T(col, startRow, endRow);
 		return typeof(return)(c.array); // TODO: why .array?
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return getColumn!(%1$s)(col, startColumn, endColumn);
+	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
@@ -245,38 +245,38 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return typeof(return)(&this, col, startColumn, endColumn);
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return typeof(return)(&this, col, startColumn, endColumn);
+	Column!(T) iterateColumn(T)(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return typeof(return)(&this, col, startColumn, endColumn);
+	Column!(long) iterateColumnLong(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return typeof(return)(&this, col, startColumn, endColumn);
+	Column!(double) iterateColumnDouble(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return typeof(return)(&this, col, startColumn, endColumn);
+	Column!(string) iterateColumnString(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max)
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow = 0, size_t endRow = size_t.max)
 	{
-		return typeof(return)(&this, col, startColumn, endColumn);
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
-		return typeof(return)(&this, col, startColumn, endColumn);
+	Column!(Date) iterateColumnDate(size_t col, size_t startRow = 0, size_t endRow = size_t.max) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max)
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow = 0, size_t endRow = size_t.max)
 	{
-		return typeof(return)(&this, col, startColumn, endColumn);
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
 	// Row
