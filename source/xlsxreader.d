@@ -231,7 +231,7 @@ struct Sheet {
 
 	Iterator!T getColumn(T)(size_t col, size_t startColumn = 0, size_t endColumn = size_t.max) {
 		auto c = this.iterateColumn!T(col, startColumn, endColumn);
-		return typeof(return)(c.array);
+		return typeof(return)(c.array); // TODO: why .array?
 	}
 
 	private enum t = q{
