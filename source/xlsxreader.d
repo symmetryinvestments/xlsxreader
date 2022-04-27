@@ -4,7 +4,7 @@ import std.algorithm.iteration : filter, map, joiner;
 import std.algorithm.mutation : reverse;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
-import std.array : array, empty, front, popFront;
+import std.array : array, empty, front, replace, popFront;
 import std.ascii : isDigit;
 import std.experimental.logger;
 import std.conv : to;
@@ -174,6 +174,8 @@ enum CellType {
 
 ///
 struct Sheet {
+	import std.ascii : toUpper;
+
 	Cell[] cells;
 	Cell[][] table;
 	Pos maxPos;
@@ -239,7 +241,6 @@ struct Sheet {
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
 			"DateTime"])
 	{
-		import std.ascii : toUpper;
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
@@ -294,7 +295,6 @@ struct Sheet {
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
 			"DateTime"])
 	{
-		import std.ascii : toUpper;
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
@@ -814,16 +814,24 @@ SheetNameId[] sheetNames(string filename) {
 	string wbData = convertToString(wb);
 
 	auto dom = parseDOM(wbData);
-	assert(dom.children.length == 1);
+	if(dom.children.length != 1) {
+		return [];
+	}
 	auto workbook = dom.children[0];
 	string sheetName = workbook.name == "workbook"
 		? "sheets" : "s:sheets";
-	assert(workbook.name == "workbook" || workbook.name == "s:workbook");
+	if(workbook.name != "workbook" && workbook.name != "s:workbook") {
+		return [];
+	}
 	auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
-	assert(!sheetsRng.empty);
+	if(sheetsRng.empty) {
+		return [];
+	}
+
 	return sheetsRng.front.children
 		.map!(s => SheetNameId(
-					s.attributes.filter!(a => a.name == "name").front.value,
+					s.attributes.filter!(a => a.name == "name").front.value
+						.specialCharacterReplacementReverse(),
 					s.attributes.filter!(a => a.name == "sheetId").front
 						.value.to!int(),
 					s.attributes.filter!(a => a.name == "r:id").front.value,
@@ -837,6 +845,12 @@ SheetNameId[] sheetNames(string filename) {
 unittest {
 	auto r = sheetNames("multitable.xlsx");
 	assert(r[0].name == "wb1");
+	assert(r[0].id == 1);
+}
+
+unittest {
+	auto r = sheetNames("sheetnames.xlsx");
+	assert(r[0].name == "A & B ;", r[0].name);
 	assert(r[0].id == 1);
 }
 
@@ -1159,14 +1173,30 @@ Pos elementMax(Pos a, Pos b) {
 			a.col < b.col ? b.col : a.col);
 }
 
+string specialCharacterReplacement(string s) {
+	return s.replace("\"", "&quot;")
+		.replace("'", "&apos;")
+		.replace("<", "&lt;")
+		.replace(">", "&gt;")
+		.replace("&", "&amp;");
+}
+
+string specialCharacterReplacementReverse(string s) {
+	return s.replace("&quot;", "\"")
+		.replace("&apos;", "'")
+		.replace("&lt;", "<")
+		.replace("&gt;", ">")
+		.replace("&amp;", "&");
+}
+
 unittest {
-	import std.math : approxEqual;
+	import std.math : isClose;
 	auto r = readSheet("multitable.xlsx", "wb1");
-	assert(approxEqual(r.table[12][5].value.get!double(), 26.74),
+	assert(isClose(r.table[12][5].value.get!double(), 26.74),
 			format("%s", r.table[12][5])
 		);
 
-	assert(approxEqual(r.table[13][5].value.get!double(), -26.74),
+	assert(isClose(r.table[13][5].value.get!double(), -26.74),
 			format("%s", r.table[13][5])
 		);
 }
@@ -1267,12 +1297,12 @@ unittest {
 }
 
 unittest {
-	import std.math : approxEqual;
+	import std.math : isClose;
 	auto sheet = readSheet("toto.xlsx", "Trades");
 	writefln("%(%s\n%)", sheet.cells);
 
 	auto r = sheet.getRowString(1, 0, 2).array;
 
 	double d = to!double(r[1]);
-	assert(approxEqual(d, 38204642.510000));
+	assert(isClose(d, 38204642.510000));
 }
