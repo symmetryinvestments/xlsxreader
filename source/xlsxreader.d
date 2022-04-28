@@ -1045,7 +1045,7 @@ Data convert(string s) {
 		return s;
 	}
 
-	if(canConvertToLong(s)) {
+	if(canConvertToLong(s) && !s.startsWith('0')) {
 		return Data(to!long(s));
 	} else if(canConvertToDouble(s)) {
 		return Data(to!double(s));
@@ -1305,4 +1305,11 @@ unittest {
 
 	double d = to!double(r[1]);
 	assert(isClose(d, 38204642.510000));
+}
+
+unittest {
+	auto sheet = readSheet("leading_zeros.xlsx", "Sheet1");
+	auto a2 = sheet.cells.filter!(c => c.r == "A2");
+	assert(!a2.empty);
+	assert(a2.front.value == "0012", format("%s", a2.front.value));
 }
