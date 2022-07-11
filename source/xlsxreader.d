@@ -1016,9 +1016,71 @@ private bool canConvertToLong(string s) {
 private immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
 private auto rgx = ctRegex!rs;
 
-private bool canConvertToDouble(string s) {
+private bool canConvertToDoubleOld(string s) {
 	auto cap = matchAll(s, rgx);
 	return cap.empty || cap.front.hit != s ? false : true;
+}
+
+private bool canConvertToDouble(string s) pure @safe @nogc {
+	if(s.startsWith('+') || s.startsWith('-')) {
+		s = s[1 .. $];
+	}
+	if(s.empty) {
+		return false;
+	}
+
+	if(s[0] < '0' || s[0] > '9') { // at least one in [0-9]
+		return false;
+	}
+
+	s = s[1 .. $];
+
+	if(s.empty) {
+		return true;
+	}
+
+	while(!s.empty && s[0] >= '0' && s[0] <= '9') {
+		s = s[1 .. $];
+	}
+	if(s.empty) {
+		return true;
+	}
+	if(s[0] != '.') {
+		return false;
+	}
+	s = s[1 .. $];
+	if(s.empty) {
+		return true;
+	}
+
+	while(!s.empty && s[0] >= '0' && s[0] <= '9') {
+		s = s[1 .. $];
+	}
+
+	return s.empty;
+}
+
+unittest {
+	static struct Test {
+		string tt;
+		bool rslt;
+	}
+	auto tests =
+		[ Test("-", false)
+		, Test("0.0", true)
+		, Test("-0.", true)
+		, Test("-0.0", true)
+		, Test("-0.a", false)
+		, Test("-0.0", true)
+		, Test("-1100.0", true)
+		];
+	foreach(t; tests) {
+		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt)
+				&& canConvertToDouble(t.tt) == t.rslt
+			, format("%s %s %s %s", t.tt
+				, canConvertToDouble(t.tt), canConvertToDoubleOld(t.tt)
+				, t.rslt));
+	}
 }
 
 Data convert(string s) {
@@ -1073,11 +1135,11 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	auto rows = sdRng.front.children
 		.filter!(r => r.name == "row");
 
-	foreach(row; rows) {
+	foreach(ref row; rows) {
 		if(row.type != EntityType.elementStart || row.children.empty) {
 			continue;
 		}
-		foreach(c; row.children.filter!(r => r.name == "c")) {
+		foreach(ref c; row.children.filter!(r => r.name == "c")) {
 			Cell tmp;
 			tmp.row = row.attributes.filter!(a => a.name == "r")
 				.front.value.to!size_t();
