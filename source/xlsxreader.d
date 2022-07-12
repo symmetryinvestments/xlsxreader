@@ -1156,3 +1156,18 @@ unittest {
 	assert(!a2.empty);
 	assert(a2.front.xmlValue == "0012", format("%s", a2.front));
 }
+
+unittest {
+	import std.algorithm.comparison : equal;
+	auto s = readSheet("datetimes.xlsx", "Sheet1");
+	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
+	auto rslt = s.iterateColumn!DateTime(0, 0, 2);
+	assert(!rslt.empty);
+
+	auto target =
+		[ DateTime(Date(1986,1,11), TimeOfDay.init)
+		, DateTime(Date(1986,7,2), TimeOfDay.init)
+		];
+	assert(equal(rslt, target), format("\ngot: %s\nexp: %s\ntable %s", rslt
+				, target, s.toString()));
+}
