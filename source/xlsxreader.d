@@ -42,123 +42,8 @@ struct Cell {
 	string r; // c[r]
 	string v; // c.v the value or ptr
 	string f; // c.f the formula
-	Data value;
+	string xmlValue;
 	Pos position;
-
-	bool canConvertTo(CellType ct) const {
-		auto b = (bool l) {
-			switch(ct) {
-				case CellType.datetime: return false;
-				case CellType.timeofday: return false;
-				case CellType.date: return false;
-				default: return true;
-			}
-		};
-
-		auto dt = (DateTime l) {
-			switch(ct) {
-				case CellType.datetime: return true;
-				case CellType.timeofday: return true;
-				case CellType.date: return true;
-				case CellType.double_: return true;
-				default: return false;
-			}
-		};
-
-		auto de = (Date l) {
-			switch(ct) {
-				case CellType.datetime: return false;
-				case CellType.timeofday: return false;
-				case CellType.date: return true;
-				case CellType.double_: return true;
-				case CellType.long_: return true;
-				default: return false;
-			}
-		};
-
-		auto tod = (TimeOfDay l) {
-			switch(ct) {
-				case CellType.datetime: return false;
-				case CellType.timeofday: return true;
-				case CellType.double_: return true;
-				default: return false;
-			}
-		};
-
-		auto l = (long l) {
-			switch(ct) {
-				case CellType.date: return !tryConvertTo!Date(l);
-				case CellType.long_: return true;
-				case CellType.string_: return true;
-				case CellType.double_: return true;
-				case CellType.bool_: return l == 0 || l == 1;
-				default: return false;
-			}
-		};
-
-		auto d = (double l) {
-			switch(ct) {
-				case CellType.string_: return true;
-				case CellType.double_: return true;
-				case CellType.datetime: return !tryConvertTo!DateTime(l);
-				case CellType.date: return !tryConvertTo!Date(l);
-				case CellType.timeofday: return !tryConvertTo!TimeOfDay(l);
-				default: return false;
-			}
-		};
-
-		auto s = (string l) {
-			switch(ct) {
-				case CellType.string_: return true;
-				case CellType.bool_: return !tryConvertTo!bool(l);
-				case CellType.long_: return !tryConvertTo!long(l);
-				case CellType.double_: return !tryConvertTo!double(l);
-				case CellType.datetime: return !tryConvertTo!DateTime(l);
-				case CellType.date: return !tryConvertTo!Date(l);
-				case CellType.timeofday: return !tryConvertTo!TimeOfDay(l);
-				default: return false;
-			}
-		};
-
-		return this.value.visit!(
-				(bool l) => b(l),
-				(long lo) => l(lo),
-				(double l) => d(l),
-				(string l) => s(l),
-				(DateTime l) => dt(l),
-				(Date l) => de(l),
-				(TimeOfDay l) => tod(l),
-				() => false)
-			();
-	}
-
-	bool convertToBool() {
-		return convertTo!bool(this.value);
-	}
-
-	long convertToLong() {
-		return convertTo!long(this.value);
-	}
-
-	double convertToDouble() {
-		return convertTo!double(this.value);
-	}
-
-	string convertToString() {
-		return convertTo!string(this.value);
-	}
-
-	Date convertToDate() {
-		return convertTo!Date(this.value);
-	}
-
-	TimeOfDay convertToTimeOfDay() {
-		return convertTo!TimeOfDay(this.value);
-	}
-
-	DateTime convertToDateTime() {
-		return convertTo!DateTime(this.value);
-	}
 }
 
 //
@@ -187,16 +72,7 @@ struct Sheet {
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach(row; this.table) {
 			foreach(idx, Cell col; row) {
-				string s = col.value.visit!(
-						(bool l) => to!string(l),
-						(long l) => to!string(l),
-						(double l) => format("%.4f", l),
-						(string l) => l,
-						(DateTime l) => l.toISOExtString(),
-						(Date l) => l.toISOExtString(),
-						(TimeOfDay l) => l.toISOExtString(),
-						() => "")
-					();
+				string s = col.xmlValue;
 
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
 			}
@@ -206,16 +82,7 @@ struct Sheet {
 		auto app = appender!string();
 		foreach(row; this.table) {
 			foreach(idx, Cell col; row) {
-				string s = col.value.visit!(
-						(bool l) => to!string(l),
-						(long l) => to!string(l),
-						(double l) => format("%.4f", l),
-						(string l) => l,
-						(DateTime l) => l.toISOExtString(),
-						(Date l) => l.toISOExtString(),
-						(TimeOfDay l) => l.toISOExtString(),
-						() => "")
-					();
+				string s = col.xmlValue;
 				formattedWrite(app, "%*s, ", maxCol[idx], s);
 			}
 			formattedWrite(app, "\n");
@@ -420,16 +287,7 @@ struct Row(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.ru.front.value);
-	}
-
-	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.ru.start; it < this.ru.end; ++it) {
-			if(!this.ru.sheet.table[this.ru.row][it].canConvertTo(ct)) {
-				return false;
-			}
-		}
-		return true;
+		this.front = convertTo!T(this.ru.front.xmlValue);
 	}
 }
 
@@ -493,16 +351,7 @@ struct Column(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.cu.front.value);
-	}
-
-	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.cu.start; it < this.cu.end; ++it) {
-			if(!this.cu.sheet.table[it][this.cu.col].canConvertTo(ct)) {
-				return false;
-			}
-		}
-		return true;
+		this.front = convertTo!T(this.cu.front.xmlValue);
 	}
 }
 
@@ -674,102 +523,39 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 	}
 }
 
-T convertTo(T)(Data var) {
-	static if(is(T == Data)) {
-		return var;
-	} else static if(isSomeString!T) {
-		return var.visit!(
-				(bool l) => to!string(l),
-				(long l) => to!string(l),
-				(double l) => format("%f", l),
-				(string l) => l,
-				(DateTime l) => l.toISOExtString(),
-				(Date l) => l.toISOExtString(),
-				(TimeOfDay l) => l.toISOExtString(),
-				() => "")
-			();
+T convertTo(T)(string var) {
+	import std.math : lround;
+
+	static if(isSomeString!T) {
+		return to!T(var);
 	} else static if(is(T == bool)) {
-		if(var.type != typeid(bool) && var.type != typeid(long)
-				&& var.type == typeid(string))
-		{
-			throw new Exception("Can not convert " ~ var.type.toString() ~
-					" to bool");
-		}
-		return var.visit!(
-				(bool l) => l,
-				(long l) => l == 0 ? false : true,
-				(string l) => to!bool(l),
-				(double l) => false,
-				(DateTime l) => false,
-				(Date l) => false,
-				(TimeOfDay l) => false,
-				() => false)
-			();
+		return var == "1";
 	} else static if(isIntegral!T) {
-		return var.visit!(
-				(bool l) => to!T(l),
-				(long l) => to!T(l),
-				(double l) => to!T(l),
-				(string l) => to!T(l),
-				(DateTime l) => to!T(dateToLong(l.date)),
-				(Date l) => to!T(dateToLong(l)),
-				(TimeOfDay l) => to!T(0),
-				() => to!T(0))
-			();
+		return to!T(var);
 	} else static if(isFloatingPoint!T) {
-		return var.visit!(
-				(bool l) => to!T(l),
-				(long l) => to!T(l),
-				(double l) => to!T(l),
-				(string l) => to!T(l),
-				(DateTime l) => to!T(dateToLong(l.date)),
-				(Date l) => to!T(dateToLong(l)),
-				(TimeOfDay l) => to!T(0),
-				() => T.init)
-			();
+		return to!T(var);
 	} else static if(is(T == DateTime)) {
-		return var.visit!(
-				(bool l) => DateTime.init,
-				(long l) => doubleToDateTime(to!long(l)),
-				(double l) => doubleToDateTime(l),
-				(string l) => doubleToDateTime(to!double(l)),
-				(DateTime l) => l,
-				(Date l) => DateTime(l, TimeOfDay.init),
-				(TimeOfDay l) => DateTime(Date.init, l),
-				() => DateTime.init)
-			();
+		if(var.canConvertToLong()) {
+			return doubleToDateTime(to!long(var));
+		} else if(var.canConvertToDouble()) {
+			return doubleToDateTime(to!double(var));
+		}
+		enforce(false, "Can not convert '" ~ var ~ "' to a DateTime");
+		assert(false, "Unreachable");
 	} else static if(is(T == Date)) {
-		import std.math : lround;
-
-		return var.visit!(
-				(bool l) => Date.init,
-				(long l) => longToDate(l),
-				(double l) => longToDate(lround(l)),
-				(string l) => stringToDate(l),
-				(DateTime l) => l.date,
-				(Date l) => l,
-				(TimeOfDay l) => Date.init,
-				() => Date.init)
-			();
+		if(var.canConvertToLong()) {
+			return longToDate(to!long(var));
+		} else if(var.canConvertToDouble()) {
+			return longToDate(lround(to!double(var)));
+		}
+		return stringToDate(var);
 	} else static if(is(T == TimeOfDay)) {
-		import std.math : lround;
-
-		return var.visit!(
-				(bool l) => TimeOfDay.init,
-				(long l) => TimeOfDay.init,
-				(double l) => doubleToTimeOfDay(l - cast(long)l),
-				(string l) => doubleToTimeOfDay(
-						to!double(l) - cast(long)to!double(l)
-					),
-				(DateTime l) => l.timeOfDay,
-				(Date l) => TimeOfDay.init,
-				(TimeOfDay l) => l,
-				() => TimeOfDay.init)
-			();
+		double l = to!double(var);
+		return doubleToTimeOfDay(l - cast(long)l);
+	} else {
+		static assert(false, T.stringof ~ " not supported");
 	}
-	assert(false, T.stringof);
 }
-
 
 private ZipArchive readFile(string filename) {
 	enforce(exists(filename), "File with name " ~ filename ~ " does not
@@ -906,7 +692,7 @@ Sheet readSheetImpl(string filename, string rid) {
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable ss = "xl/sharedStrings.xml";
-	Data[] sharedStrings = (ss in ams)
+	string[] sharedStrings = (ss in ams)
 		? readSharedEntries(file, ams[ss])
 		: [];
 	//logf("%s", sharedStrings);
@@ -938,11 +724,11 @@ Sheet readSheetImpl(string filename, string rid) {
 	return ret;
 }
 
-Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
+string[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 	ubyte[] ss = za.expand(am);
 	string ssData = convertToString(ss);
 	auto dom = parseDOM(ssData);
-	Data[] ret;
+	string[] ret;
 	if(dom.type != EntityType.elementStart) {
 		return ret;
 	}
@@ -963,19 +749,22 @@ Data[] readSharedEntries(ZipArchive za, ArchiveMember am) {
 			if(tORr.name == "t" && tORr.type == EntityType.elementStart
 					&& !tORr.children.empty)
 			{
-				ret ~= Data(convert(tORr.children[0].text));
+				//ret ~= Data(convert(tORr.children[0].text));
+				ret ~= tORr.children[0].text.removeSpecialCharacter();
 			} else if(tORr.name == "r") {
 				foreach(r; tORr.children.filter!(r => r.name == "t")) {
 					if(r.type == EntityType.elementStart && !r.children.empty) {
-						tmp ~= r.children[0].text;
+						tmp ~= r.children[0].text.removeSpecialCharacter();
 					}
 				}
 			} else {
-				ret ~= Data.init;
+				//ret ~= Data.init;
+				ret ~= "";
 			}
 		}
 		if(!tmp.empty) {
-			ret ~= Data(convert(tmp));
+			//ret ~= Data(convert(tmp));
+			ret ~= tmp.removeSpecialCharacter();
 		}
 	}
 	return ret;
@@ -1016,12 +805,74 @@ private bool canConvertToLong(string s) {
 private immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
 private auto rgx = ctRegex!rs;
 
-private bool canConvertToDouble(string s) {
+private bool canConvertToDoubleOld(string s) {
 	auto cap = matchAll(s, rgx);
 	return cap.empty || cap.front.hit != s ? false : true;
 }
 
-Data convert(string s) {
+private bool canConvertToDouble(string s) pure @safe @nogc {
+	if(s.startsWith('+') || s.startsWith('-')) {
+		s = s[1 .. $];
+	}
+	if(s.empty) {
+		return false;
+	}
+
+	if(s[0] < '0' || s[0] > '9') { // at least one in [0-9]
+		return false;
+	}
+
+	s = s[1 .. $];
+
+	if(s.empty) {
+		return true;
+	}
+
+	while(!s.empty && s[0] >= '0' && s[0] <= '9') {
+		s = s[1 .. $];
+	}
+	if(s.empty) {
+		return true;
+	}
+	if(s[0] != '.') {
+		return false;
+	}
+	s = s[1 .. $];
+	if(s.empty) {
+		return true;
+	}
+
+	while(!s.empty && s[0] >= '0' && s[0] <= '9') {
+		s = s[1 .. $];
+	}
+
+	return s.empty;
+}
+
+unittest {
+	static struct Test {
+		string tt;
+		bool rslt;
+	}
+	auto tests =
+		[ Test("-", false)
+		, Test("0.0", true)
+		, Test("-0.", true)
+		, Test("-0.0", true)
+		, Test("-0.a", false)
+		, Test("-0.0", true)
+		, Test("-1100.0", true)
+		];
+	foreach(t; tests) {
+		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt)
+				&& canConvertToDouble(t.tt) == t.rslt
+			, format("%s %s %s %s", t.tt
+				, canConvertToDouble(t.tt), canConvertToDoubleOld(t.tt)
+				, t.rslt));
+	}
+}
+
+string removeSpecialCharacter(string s) {
 	struct ToRe {
 		string from;
 		string to;
@@ -1046,13 +897,7 @@ Data convert(string s) {
 		return s;
 	}
 
-	if(canConvertToLong(s) && !s.startsWith('0')) {
-		return Data(to!long(s));
-	} else if(canConvertToDouble(s)) {
-		return Data(to!double(s));
-	} else {
-		return Data(replaceStrings(s));
-	}
+	return replaceStrings(s);
 }
 
 Cell[] readCells(ZipArchive za, ArchiveMember am) {
@@ -1073,11 +918,11 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	auto rows = sdRng.front.children
 		.filter!(r => r.name == "row");
 
-	foreach(row; rows) {
+	foreach(ref row; rows) {
 		if(row.type != EntityType.elementStart || row.children.empty) {
 			continue;
 		}
-		foreach(c; row.children.filter!(r => r.name == "c")) {
+		foreach(ref c; row.children.filter!(r => r.name == "c")) {
 			Cell tmp;
 			tmp.row = row.attributes.filter!(a => a.name == "r")
 				.front.value.to!size_t();
@@ -1125,24 +970,28 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	return ret;
 }
 
-Cell[] insertValueIntoCell(Cell[] cells, Data[] ss) {
+Cell[] insertValueIntoCell(Cell[] cells, string[] ss) {
 	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
 	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach(ref Cell c; cells) {
 		assert(canFind(excepted, c.t) || c.t.empty,
 				format("'%s' not in [%s]", c.t, excepted));
 		if(c.t.empty) {
-			c.value = convert(c.v);
+			//c.value = convert(c.v);
+			c.xmlValue = c.v.removeSpecialCharacter();
 		} else if(canFind(same, c.t)) {
-			c.value = convert(c.v);
+			//c.value = convert(c.v);
+			c.xmlValue = c.v.removeSpecialCharacter();
 		} else if(c.t == "b") {
 			//logf("'%s' %s", c.v, c);
-			c.value = c.v == "1";
+			//c.value = c.v == "1";
+			c.xmlValue = c.v.removeSpecialCharacter();
 		} else {
 			if(!c.v.empty) {
 				size_t idx = to!size_t(c.v);
 				//logf("'%s' %s", c.v, idx);
-				c.value = ss[idx];
+				//c.value = ss[idx];
+				c.xmlValue = ss[idx];
 			}
 		}
 	}
@@ -1193,11 +1042,11 @@ string specialCharacterReplacementReverse(string s) {
 unittest {
 	import std.math : isClose;
 	auto r = readSheet("multitable.xlsx", "wb1");
-	assert(isClose(r.table[12][5].value.get!double(), 26.74),
+	assert(isClose(r.table[12][5].xmlValue.to!double(), 26.74),
 			format("%s", r.table[12][5])
 		);
 
-	assert(isClose(r.table[13][5].value.get!double(), -26.74),
+	assert(isClose(r.table[13][5].xmlValue.to!double(), -26.74),
 			format("%s", r.table[13][5])
 		);
 }
@@ -1206,10 +1055,6 @@ unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
-
-	assert(r.canConvertTo(CellType.long_));
-	assert(r.canConvertTo(CellType.double_));
-	assert(r.canConvertTo(CellType.string_));
 
 	auto expected = [1, 2, 3, 4, 5];
 	assert(equal(r, expected), format("%s", r));
@@ -1250,10 +1095,10 @@ unittest {
 unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
-	writeln(s.table[0][0].value.type());
-	assert(s.table[0][0].value.peek!long(),
-			format("%s", s.table[0][0].value));
-	assert(s.table[0][0].canConvertTo(CellType.bool_));
+	writeln(s.table[0][0].xmlValue);
+	assert(s.table[0][0].xmlValue.to!long(),
+			format("%s", s.table[0][0].xmlValue));
+	//assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
 unittest {
@@ -1267,9 +1112,6 @@ unittest {
 		foreach(s; sn) {
 			auto sheet = readSheet(de.name, s.name);
 			foreach(cell; sheet.cells) {
-				foreach(T; [EnumMembers!CellType]) {
-					auto cc = cell.canConvertTo(T);
-				}
 			}
 		}
 	}
@@ -1280,18 +1122,18 @@ unittest {
 	auto sheet = readSheet("testworkbook.xlsx", "ws1");
 	//writefln("%(%s\n%)", sheet.cells);
 	//writeln(sheet.toString());
-	//assert(sheet.table[2][3].value.get!long() == 1337);
+	assert(sheet.table[2][3].xmlValue.to!long() == 1337);
 
 	auto c = sheet.getColumnLong(3, 2, 5);
 	auto r = [1337, 2, 3];
-	assert(equal(c, r), format("%s", c));
+	assert(equal(c, r), format("%s %s", c, sheet.toString()));
 
 	auto c2 = sheet.getColumnString(4, 2, 5);
-	string f2 = sheet.table[2][4].convertToString();
+	string f2 = sheet.table[2][4].xmlValue;
 	assert(f2 == "hello", f2);
-	f2 = sheet.table[3][4].convertToString();
+	f2 = sheet.table[3][4].xmlValue;
 	assert(f2 == "sil", f2);
-	f2 = sheet.table[4][4].convertToString();
+	f2 = sheet.table[4][4].xmlValue;
 	assert(f2 == "foo", f2);
 	auto r2 = ["hello", "sil", "foo"];
 	assert(equal(c2, r2), format("%s", c2));
@@ -1312,5 +1154,20 @@ unittest {
 	auto sheet = readSheet("leading_zeros.xlsx", "Sheet1");
 	auto a2 = sheet.cells.filter!(c => c.r == "A2");
 	assert(!a2.empty);
-	assert(a2.front.value == "0012", format("%s", a2.front.value));
+	assert(a2.front.xmlValue == "0012", format("%s", a2.front));
+}
+
+unittest {
+	import std.algorithm.comparison : equal;
+	auto s = readSheet("datetimes.xlsx", "Sheet1");
+	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
+	auto rslt = s.iterateColumn!DateTime(0, 0, 2);
+	assert(!rslt.empty);
+
+	auto target =
+		[ DateTime(Date(1986,1,11), TimeOfDay.init)
+		, DateTime(Date(1986,7,2), TimeOfDay.init)
+		];
+	assert(equal(rslt, target), format("\ngot: %s\nexp: %s\ntable %s", rslt
+				, target, s.toString()));
 }
