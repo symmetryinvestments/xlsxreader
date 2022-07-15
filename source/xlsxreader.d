@@ -301,7 +301,7 @@ struct Sheet {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) {
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn = 0, size_t endColumn = size_t.max) @trusted /* TODO: remove @trusted when `&this` is stored in a @safe manner in `Row` */ {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
