@@ -1,4 +1,3 @@
-// TODO: add const access to getter functions, such as `getRow`
 module xlsxreader;
 
 import std.algorithm.iteration : filter, map, joiner;
