@@ -529,106 +529,34 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 
 T convertTo(T)(string var) {
 	import std.math : lround;
-
 	static if(isSomeString!T) {
 		return to!T(var);
 	} else static if(is(T == bool)) {
-		if(var.type != typeid(bool) && var.type != typeid(long)
-		   && var.type == typeid(string))
-		{
-			throw new Exception("Can not convert " ~ var.type.toString() ~
-								" to bool");
-		}
-		return var.visit!(
-			(bool l) => l,
-			(long l) => l == 0 ? false : true,
-			(string l) => to!bool(l),
-			(double l) => false,
-			(DateTime l) => false,
-			(Date l) => false,
-			(TimeOfDay l) => false,
-			() => false)
-		();
+		return var == "1";
 	} else static if(isIntegral!T) {
-		return var.visit!(
-			(bool l) => to!T(l),
-			(long l) => to!T(l),
-			(double l) => to!T(l),
-			(string l) => to!T(l),
-			(DateTime l) => to!T(dateToLong(l.date)),
-			(Date l) => to!T(dateToLong(l)),
-			(TimeOfDay l) => to!T(0),
-			() => to!T(0))
-		();
-		// return to!T(var);
+		return to!T(var);
 	} else static if(isFloatingPoint!T) {
-		return var.visit!(
-			(bool l) => to!T(l),
-			(long l) => to!T(l),
-			(double l) => to!T(l),
-			(string l) => to!T(l),
-			(DateTime l) => to!T(dateToLong(l.date)),
-			(Date l) => to!T(dateToLong(l)),
-			(TimeOfDay l) => to!T(0),
-			() => T.init)
-		();
-		// return to!T(var);
+		return to!T(var);
 	} else static if(is(T == DateTime)) {
-		return var.visit!(
-			(bool l) => DateTime.init,
-			(long l) => doubleToDateTime(to!long(l)),
-			(double l) => doubleToDateTime(l),
-			(string l) => doubleToDateTime(to!double(l)),
-			(DateTime l) => l,
-			(Date l) => DateTime(l, TimeOfDay.init),
-			(TimeOfDay l) => DateTime(Date.init, l),
-			() => DateTime.init)
-		();
-		// if(var.canConvertToLong()) {
-		// 	return doubleToDateTime(to!long(var));
-		// } else if(var.canConvertToDouble()) {
-		// 	return doubleToDateTime(to!double(var));
-		// }
-		// enforce(false, "Can not convert '" ~ var ~ "' to a DateTime");
-		// assert(false, "Unreachable");
+		if(var.canConvertToLong()) {
+			return doubleToDateTime(to!long(var));
+		} else if(var.canConvertToDouble()) {
+			return doubleToDateTime(to!double(var));
+		}
+		enforce(false, "Can not convert '" ~ var ~ "' to a DateTime");
+		assert(false, "Unreachable");
 	} else static if(is(T == Date)) {
-		import std.math : lround;
-
-		return var.visit!(
-			(bool l) => Date.init,
-			(long l) => longToDate(l),
-			(double l) => longToDate(lround(l)),
-			(string l) => stringToDate(l),
-			(DateTime l) => l.date,
-			(Date l) => l,
-			(TimeOfDay l) => Date.init,
-			() => Date.init)
-		();
-		// if(var.canConvertToLong()) {
-		// 	return longToDate(to!long(var));
-		// } else if(var.canConvertToDouble()) {
-		// 	return longToDate(lround(to!double(var)));
-		// }
-		// return stringToDate(var);
+		if(var.canConvertToLong()) {
+			return longToDate(to!long(var));
+		} else if(var.canConvertToDouble()) {
+			return longToDate(lround(to!double(var)));
+		}
+		return stringToDate(var);
 	} else static if(is(T == TimeOfDay)) {
-		import std.math : lround;
-
-		return var.visit!(
-			(bool l) => TimeOfDay.init,
-			(long l) => TimeOfDay.init,
-			(double l) => doubleToTimeOfDay(l - cast(long)l),
-			(string l) => doubleToTimeOfDay(
-				to!double(l) - cast(long)to!double(l)
-			),
-			(DateTime l) => l.timeOfDay,
-			(Date l) => TimeOfDay.init,
-			(TimeOfDay l) => l,
-			() => TimeOfDay.init)
-		();
-	// 	double l = to!double(var);
-	// 	return doubleToTimeOfDay(l - cast(long)l);
-	// } else {
-	// 	static assert(false, T.stringof ~ " not supported");
+		double l = to!double(var);
+		return doubleToTimeOfDay(l - cast(long)l);
+	} else {
+		static assert(false, T.stringof ~ " not supported");
 	}
 }
 
