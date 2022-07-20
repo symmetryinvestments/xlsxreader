@@ -926,7 +926,6 @@ Sheet readSheetImpl(in string filename, in string rid) @trusted {
 	foreach(c; ret.cells) {
 		ret.table[c.position.row][c.position.col] = c;
 	}
-	// debug writeln("xlsxreader: sheet members: cells.length:", ret.cells.length, " table.length:", ret.table.length, " table[0].length:", ret.table[0].length, " ret.maxPos:", ret.maxPos);
 	return ret;
 }
 
