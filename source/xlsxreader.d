@@ -46,121 +46,6 @@ struct Cell {
 	string f; // c.f the formula
 	string xmlValue;
 	Pos position;
-
-	bool canConvertTo(CellType ct) const @trusted {
-		auto b = (bool l) {
-			switch(ct) {
-				case CellType.datetime: return false;
-				case CellType.timeofday: return false;
-				case CellType.date: return false;
-				default: return true;
-			}
-		};
-
-		auto dt = (DateTime l) {
-			switch(ct) {
-				case CellType.datetime: return true;
-				case CellType.timeofday: return true;
-				case CellType.date: return true;
-				case CellType.double_: return true;
-				default: return false;
-			}
-		};
-
-		auto de = (Date l) {
-			switch(ct) {
-				case CellType.datetime: return false;
-				case CellType.timeofday: return false;
-				case CellType.date: return true;
-				case CellType.double_: return true;
-				case CellType.long_: return true;
-				default: return false;
-			}
-		};
-
-		auto tod = (TimeOfDay l) {
-			switch(ct) {
-				case CellType.datetime: return false;
-				case CellType.timeofday: return true;
-				case CellType.double_: return true;
-				default: return false;
-			}
-		};
-
-		auto l = (long l) {
-			switch(ct) {
-				case CellType.date: return !tryConvertTo!Date(l);
-				case CellType.long_: return true;
-				case CellType.string_: return true;
-				case CellType.double_: return true;
-				case CellType.bool_: return l == 0 || l == 1;
-				default: return false;
-			}
-		};
-
-		auto d = (double l) {
-			switch(ct) {
-				case CellType.string_: return true;
-				case CellType.double_: return true;
-				case CellType.datetime: return !tryConvertTo!DateTime(l);
-				case CellType.date: return !tryConvertTo!Date(l);
-				case CellType.timeofday: return !tryConvertTo!TimeOfDay(l);
-				default: return false;
-			}
-		};
-
-		auto s = (string l) {
-			switch(ct) {
-				case CellType.string_: return true;
-				case CellType.bool_: return !tryConvertTo!bool(l);
-				case CellType.long_: return !tryConvertTo!long(l);
-				case CellType.double_: return !tryConvertTo!double(l);
-				case CellType.datetime: return !tryConvertTo!DateTime(l);
-				case CellType.date: return !tryConvertTo!Date(l);
-				case CellType.timeofday: return !tryConvertTo!TimeOfDay(l);
-				default: return false;
-			}
-		};
-
-		return this.value.visit!(
-				(bool l) => b(l),
-				(long lo) => l(lo),
-				(double l) => d(l),
-				(string l) => s(l),
-				(DateTime l) => dt(l),
-				(Date l) => de(l),
-				(TimeOfDay l) => tod(l),
-				() => false)
-			();
-	}
-
-	bool convertToBool() @trusted const {
-		return convertTo!bool(this.value);
-	}
-
-	long convertToLong() @trusted const {
-		return convertTo!long(this.value);
-	}
-
-	double convertToDouble() @trusted const {
-		return convertTo!double(this.value);
-	}
-
-	string convertToString() @trusted const {
-		return convertTo!string(this.value);
-	}
-
-	Date convertToDate() @trusted const {
-		return convertTo!Date(this.value);
-	}
-
-	TimeOfDay convertToTimeOfDay() @trusted const {
-		return convertTo!TimeOfDay(this.value);
-	}
-
-	DateTime convertToDateTime() @trusted const {
-		return convertTo!DateTime(this.value);
-	}
 }
 
 //
@@ -407,15 +292,6 @@ struct Row(T) {
 	private void read() {
 		this.front = convertTo!T(this.ru.front.value);
 	}
-
-	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.ru.startColumn; it < this.ru.endColumn; ++it) {
-			if(!this.ru.sheet.table[this.ru.row][it].canConvertTo(ct)) {
-				return false;
-			}
-		}
-		return true;
-	}
 }
 
 ///
@@ -480,15 +356,6 @@ struct Column(T) {
 
 	private void read() {
 		this.front = convertTo!T(this.cu.front.value);
-	}
-
-	bool canConvertTo(CellType ct) const {
-		for(size_t it = this.cu.startRow; it < this.cu.endRow; ++it) {
-			if(!this.cu.sheet.table[it][this.cu.col].canConvertTo(ct)) {
-				return false;
-			}
-		}
-		return true;
 	}
 }
 
