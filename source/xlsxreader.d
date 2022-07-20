@@ -18,7 +18,7 @@ import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : tuple, Nullable, nullable;
 import std.utf : byChar;
-import std.variant : Algebraic, visit; // TODO: replace with import mir.algebraic : Algebraic, visit;
+import std.variant : Algebraic, visit;
 import std.zip;
 
 import dxml.dom;
