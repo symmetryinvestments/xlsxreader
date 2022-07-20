@@ -1245,7 +1245,7 @@ string specialCharacterReplacementReverse(string s) {
 		.replace("&amp;", "&");
 }
 
-@trusted unittest {
+unittest {
 	import std.math : isClose;
 	auto r = readSheet("multitable.xlsx", "wb1");
 	assert(isClose(r.table[12][5].xmlValue.to!double(), 26.74),
@@ -1257,7 +1257,7 @@ string specialCharacterReplacementReverse(string s) {
 		);
 }
 
-@trusted unittest {
+unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
@@ -1276,7 +1276,7 @@ string specialCharacterReplacementReverse(string s) {
 		.array;
 }
 
-@trusted unittest {
+unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb2");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
@@ -1298,7 +1298,7 @@ string specialCharacterReplacementReverse(string s) {
 	assert(equal(rslt, it2));
 }
 
-@trusted unittest {
+unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
 	writeln(s.table[0][0].xmlValue);
@@ -1307,7 +1307,7 @@ string specialCharacterReplacementReverse(string s) {
 	//assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
-@trusted unittest {
+unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
 	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
@@ -1345,7 +1345,7 @@ unittest {
 	assert(equal(c2, r2), format("%s", c2));
 }
 
-@trusted unittest {
+unittest {
 	import std.math : isClose;
 	auto sheet = readSheet("toto.xlsx", "Trades");
 	writefln("%(%s\n%)", sheet.cells);
