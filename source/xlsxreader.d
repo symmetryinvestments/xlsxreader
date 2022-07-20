@@ -976,21 +976,21 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 		assert(canFind(excepted, c.t) || c.t.empty,
 				format("'%s' not in [%s]", c.t, excepted));
 		if(c.t.empty) {
-			//c.xmlValue = convert(c.v);
-			c.xmlValue = c.v.removeSpecialCharacter();
+			//c.value = convert(c.v);
+			c.value = c.v.removeSpecialCharacter();
 		} else if(canFind(same, c.t)) {
-			//c.xmlValue = convert(c.v);
-			c.xmlValue = c.v.removeSpecialCharacter();
+			//c.value = convert(c.v);
+			c.value = c.v.removeSpecialCharacter();
 		} else if(c.t == "b") {
 			//logf("'%s' %s", c.v, c);
-			//c.xmlValue = c.v == "1";
-			c.xmlValue = c.v.removeSpecialCharacter();
+			//c.value = c.v == "1";
+			c.value = c.v.removeSpecialCharacter();
 		} else {
 			if(!c.v.empty) {
 				size_t idx = to!size_t(c.v);
 				//logf("'%s' %s", c.v, idx);
-				//c.xmlValue = ss[idx];
-				c.xmlValue = ss[idx];
+				//c.value = ss[idx];
+				c.value = ss[idx];
 			}
 		}
 	}
