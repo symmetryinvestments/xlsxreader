@@ -1101,7 +1101,7 @@ unittest {
 	//assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
-unittest {
+@trusted unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
 	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
