@@ -290,7 +290,7 @@ struct Row(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.ru.front.value);
+		this.front = convertTo!T(this.ru.front.xmlValue);
 	}
 }
 
@@ -355,7 +355,7 @@ struct Column(T) {
 	}
 
 	private void read() {
-		this.front = convertTo!T(this.cu.front.value);
+		this.front = convertTo!T(this.cu.front.xmlValue);
 	}
 }
 
@@ -977,20 +977,20 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 		assert(canFind(excepted, c.t) || c.t.empty,
 				format("'%s' not in [%s]", c.t, excepted));
 		if(c.t.empty) {
-			//c.value = convert(c.v);
+			//c.xmlValue = convert(c.v);
 			c.xmlValue = c.v.removeSpecialCharacter();
 		} else if(canFind(same, c.t)) {
-			//c.value = convert(c.v);
+			//c.xmlValue = convert(c.v);
 			c.xmlValue = c.v.removeSpecialCharacter();
 		} else if(c.t == "b") {
 			//logf("'%s' %s", c.v, c);
-			//c.value = c.v == "1";
+			//c.xmlValue = c.v == "1";
 			c.xmlValue = c.v.removeSpecialCharacter();
 		} else {
 			if(!c.v.empty) {
 				size_t idx = to!size_t(c.v);
 				//logf("'%s' %s", c.v, idx);
-				//c.value = ss[idx];
+				//c.xmlValue = ss[idx];
 				c.xmlValue = ss[idx];
 			}
 		}
