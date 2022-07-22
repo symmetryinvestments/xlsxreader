@@ -71,8 +71,8 @@ struct Sheet {
 		import std.format : formattedWrite;
 		import std.array : appender;
 		long[] maxCol = new long[](maxPos.col + 1);
-		foreach(row; this.table) {
-			foreach(idx, Cell col; row) {
+		foreach(const row; this.table) {
+			foreach(const idx, Cell col; row) {
 				string s = col.xmlValue;
 
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
@@ -81,8 +81,8 @@ struct Sheet {
 		maxCol[] += 1;
 
 		auto app = appender!string();
-		foreach(row; this.table) {
-			foreach(idx, Cell col; row) {
+		foreach(const row; this.table) {
+			foreach(const idx, Cell col; row) {
 				string s = col.xmlValue;
 				formattedWrite(app, "%*s, ", maxCol[idx], s);
 			}
@@ -429,7 +429,7 @@ long dateToLong(Date d) {
 
 unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
-	foreach(d; ds) {
+	foreach(const d; ds) {
 		long l = dateToLong(d);
 		Date r = longToDate(l);
 		assert(r == d, format("%s %s", r, d));
@@ -457,7 +457,7 @@ unittest {
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
 		 TimeOfDay(23, 59, 59), TimeOfDay(0, 0, 0)];
-	foreach(tod; tods) {
+	foreach(const tod; tods) {
 		double d = timeOfDayToDouble(tod);
 		assert(d <= 1.0, format("%s", d));
 		TimeOfDay r = doubleToTimeOfDay(d);
@@ -483,8 +483,8 @@ unittest {
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
 		 TimeOfDay(23, 59, 59), TimeOfDay(0, 0, 0)];
-	foreach(d; ds) {
-		foreach(tod; tods) {
+	foreach(const d; ds) {
+		foreach(const tod; tods) {
 			DateTime dt = DateTime(d, tod);
 			double dou = datetimeToDouble(dt);
 
@@ -676,7 +676,7 @@ Sheet readSheet(in string filename, in string sheetName) {
 }
 
 string eatXlPrefix(string fn) {
-	foreach(p; ["xl//", "/xl/"]) {
+	foreach(const p; ["xl//", "/xl/"]) {
 		if(fn.startsWith(p)) {
 			return fn[p.length .. $];
 		}
@@ -717,7 +717,7 @@ Sheet readSheetImpl(in string filename, in string rid) @trusted {
 	}
 	ret.maxPos = maxPos;
 	ret.table = new Cell[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
-	foreach(c; ret.cells) {
+	foreach(const c; ret.cells) {
 		ret.table[c.position.row][c.position.col] = c;
 	}
 	return ret;
@@ -862,7 +862,7 @@ unittest {
 		, Test("-0.0", true)
 		, Test("-1100.0", true)
 		];
-	foreach(t; tests) {
+	foreach(const t; tests) {
 		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt)
 				&& canConvertToDouble(t.tt) == t.rslt
 			, format("%s %s %s %s", t.tt
@@ -888,7 +888,7 @@ string removeSpecialCharacter(string s) {
 	string replaceStrings(string s) {
 		import std.algorithm.searching : canFind;
 		import std.array : replace;
-		foreach(tr; toRe) {
+		foreach(const tr; toRe) {
 			while(canFind(s, tr.from)) {
 				s = s.replace(tr.from, tr.to);
 			}
@@ -1005,7 +1005,7 @@ Pos toPos(in string s) {
 	size_t row = to!size_t(to!long(s[fn .. $]) - 1);
 	size_t col = 0;
 	string colS = s[0 .. fn];
-	foreach(idx, char c; colS) {
+	foreach(const idx, char c; colS) {
 		col = col * 26 + (c - 'A' + 1);
 	}
 	return Pos(row, col - 1);
@@ -1103,14 +1103,14 @@ unittest {
 @trusted unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
-	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
+	foreach(const de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
 			.filter!(a => a.name != "xlsx_files/data03.xlsx"))
 	{
 		//writeln(de.name);
 		auto sn = sheetNames(de.name);
-		foreach(s; sn) {
+		foreach(const s; sn) {
 			auto sheet = readSheet(de.name, s.name);
-			foreach(cell; sheet.cells) {
+			foreach(const cell; sheet.cells) {
 			}
 		}
 	}
