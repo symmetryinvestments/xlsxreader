@@ -262,8 +262,8 @@ struct Row(T) {
 	T front;
 
 	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
-		ru = RowUntyped(sheet, row, startColumn, endColumn);
-		read();
+		this.ru = RowUntyped(sheet, row, startColumn, endColumn);
+		this.read();
 	}
 
 	@property bool empty() const pure nothrow @nogc {
