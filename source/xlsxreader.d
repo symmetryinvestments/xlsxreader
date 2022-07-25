@@ -146,8 +146,7 @@ struct Sheet {
 	// Row
 
 	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
-		auto c = this.iterateRow!T(row, startColumn, endColumn);
-		return typeof(return)(c.array); // TODO: why .array?
+		return typeof(return)(this.iterateRow!T(row, startColumn, endColumn).array); // TODO: why .array?
 	}
 
 	private enum t2 = q{
