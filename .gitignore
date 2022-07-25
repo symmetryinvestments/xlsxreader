@@ -13,3 +13,5 @@ xlsxreader-test-*
 *.o
 *.obj
 *.lst
+libxlsxreader.a
+dub.selections.json

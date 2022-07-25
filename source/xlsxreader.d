@@ -6,7 +6,6 @@ import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, replace, popFront;
 import std.ascii : isDigit;
-import std.experimental.logger;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
@@ -66,12 +65,12 @@ struct Sheet {
 	Cell[][] table;
 	Pos maxPos;
 
-	string toString() {
+	string toString() const @safe {
 		import std.format : formattedWrite;
 		import std.array : appender;
 		long[] maxCol = new long[](maxPos.col + 1);
-		foreach(row; this.table) {
-			foreach(idx, Cell col; row) {
+		foreach(const row; this.table) {
+			foreach(const idx, Cell col; row) {
 				string s = col.xmlValue;
 
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
@@ -80,8 +79,8 @@ struct Sheet {
 		maxCol[] += 1;
 
 		auto app = appender!string();
-		foreach(row; this.table) {
-			foreach(idx, Cell col; row) {
+		foreach(const row; this.table) {
+			foreach(const idx, Cell col; row) {
 				string s = col.xmlValue;
 				formattedWrite(app, "%*s, ", maxCol[idx], s);
 			}
@@ -90,20 +89,20 @@ struct Sheet {
 		return app.data;
 	}
 
-	void printTable() {
+	void printTable() const @safe {
 		writeln(this.toString());
 	}
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t start, size_t end) {
-		auto c = this.iterateColumn!T(col, start, end);
-		return Iterator!T(c.array);
+	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) {
+		auto c = this.iterateColumn!T(col, startRow, endRow);
+		return typeof(return)(c.array);
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t start, size_t end) {
-		return getColumn!(%1$s)(col, start, end);
+	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
+		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
@@ -112,52 +111,47 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t start, size_t end) {
-		return ColumnUntyped(&this, col, start, end);
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t start, size_t end) {
-		return Column!(T)(&this, col, start, end);
+	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t start, size_t end) {
-		return Column!(long)(&this, col, start, end);
+	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t start, size_t end) {
-		return Column!(double)(&this, col, start, end);
+	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t start, size_t end) {
-		return Column!(string)(&this, col, start, end);
+	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t start,
-			size_t end)
-	{
-		return Column!(DateTime)(&this, col, start, end);
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t start, size_t end) {
-		return Column!(Date)(&this, col, start, end);
+	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t start,
-			size_t end)
-	{
-		return Column!(TimeOfDay)(&this, col, start, end);
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @safe {
+		return typeof(return)(&this, col, startRow, endRow);
 	}
 
 	// Row
 
-	Iterator!T getRow(T)(size_t row, size_t start, size_t end) {
-		auto c = this.iterateRow!T(row, start, end);
-		return Iterator!T(c.array);
+	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(this.iterateRow!T(row, startColumn, endColumn).array); // TODO: why .array?
 	}
 
 	private enum t2 = q{
-	Iterator!(%1$s) getRow%2$s(size_t row, size_t start, size_t end) {
-		return getRow!(%1$s)(row, start, end);
+	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
 	static foreach(T; ["long", "double", "string", "Date", "TimeOfDay",
@@ -166,40 +160,36 @@ struct Sheet {
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	RowUntyped iterateRowUntyped(size_t row, size_t start, size_t end) {
-		return RowUntyped(&this, row, start, end);
+	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t start, size_t end) {
-		return Row!(T)(&this, row, start, end);
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted /* TODO: remove @trusted when `&this` is stored in a @safe manner in `Row` */ {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(long) iterateRowLong(size_t row, size_t start, size_t end) {
-		return Row!(long)(&this, row, start, end);
+	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(double) iterateRowDouble(size_t row, size_t start, size_t end) {
-		return Row!(double)(&this, row, start, end);
+	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(string) iterateRowString(size_t row, size_t start, size_t end) {
-		return Row!(string)(&this, row, start, end);
+	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(DateTime) iterateRowDateTime(size_t row, size_t start,
-			size_t end)
-	{
-		return Row!(DateTime)(&this, row, start, end);
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(Date) iterateRowDate(size_t row, size_t start, size_t end) {
-		return Row!(Date)(&this, row, start, end);
+	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t start,
-			size_t end)
-	{
-		return Row!(TimeOfDay)(&this, row, start, end);
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
 
@@ -210,7 +200,7 @@ struct Iterator(T) {
 		this.data = data;
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.data.empty;
 	}
 
@@ -222,40 +212,46 @@ struct Iterator(T) {
 		return this.data.front;
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
+	}
+
+	// Request random access.
+	inout(T)[] array() inout @safe pure nothrow @nogc {
+		return data;
 	}
 }
 
 ///
 struct RowUntyped {
 	Sheet* sheet;
-	/*const*/ size_t row;
-	size_t start;
-	size_t end;
+	const size_t row;
+	const size_t startColumn;
+	const size_t endColumn;
 	size_t cur;
 
-	this(Sheet* sheet, size_t row, size_t start, size_t end) {
+	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
+		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.row = row;
-		this.start = start;
-		this.end = end;
-		this.cur = this.start;
+		this.startColumn = startColumn;
+		this.endColumn = endColumn;
+		this.cur = this.startColumn;
 	}
 
-	@property bool empty() const {
-		return this.cur >= this.end;
+	@property bool empty() const pure nothrow @nogc @safe {
+		return this.cur >= this.endColumn;
 	}
 
-	void popFront() {
+	void popFront() pure nothrow @nogc @safe {
 		++this.cur;
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe {
 		return this;
 	}
 
-	@property Cell front() {
+	@property inout(Cell) front() inout pure nothrow @nogc @safe {
 		return this.sheet.table[this.row][this.cur];
 	}
 }
@@ -263,15 +259,14 @@ struct RowUntyped {
 ///
 struct Row(T) {
 	RowUntyped ru;
-
 	T front;
 
-	this(Sheet* sheet, size_t row, size_t start, size_t end) {
-		this.ru = RowUntyped(sheet, row, start, end);
+	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) {
+		this.ru = RowUntyped(sheet, row, startColumn, endColumn);
 		this.read();
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.ru.empty;
 	}
 
@@ -282,7 +277,7 @@ struct Row(T) {
 		}
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 
@@ -294,32 +289,33 @@ struct Row(T) {
 ///
 struct ColumnUntyped {
 	Sheet* sheet;
-	/*const*/ size_t col;
-	size_t start;
-	size_t end;
+	const size_t col;
+	const size_t startRow;
+	const size_t endRow;
 	size_t cur;
 
-	this(Sheet* sheet, size_t col, size_t start, size_t end) {
+	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
+		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.col = col;
-		this.start = start;
-		this.end = end;
-		this.cur = this.start;
+		this.startRow = startRow;
+		this.endRow = endRow;
+		this.cur = this.startRow;
 	}
 
-	@property bool empty() const {
-		return this.cur >= this.end;
+	@property bool empty() const pure nothrow @nogc @safe {
+		return this.cur >= this.endRow;
 	}
 
-	void popFront() {
+	void popFront() @safe {
 		++this.cur;
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe {
 		return this;
 	}
 
-	@property Cell front() {
+	@property Cell front() @safe {
 		return this.sheet.table[this.cur][this.col];
 	}
 }
@@ -330,12 +326,12 @@ struct Column(T) {
 
 	T front;
 
-	this(Sheet* sheet, size_t col, size_t start, size_t end) {
-		this.cu = ColumnUntyped(sheet, col, start, end);
+	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) {
+		this.cu = ColumnUntyped(sheet, col, startRow, endRow);
 		this.read();
 	}
 
-	@property bool empty() const {
+	@property bool empty() const pure nothrow @nogc {
 		return this.cu.empty;
 	}
 
@@ -346,7 +342,7 @@ struct Column(T) {
 		}
 	}
 
-	typeof(this) save() {
+	inout(typeof(this)) save() inout pure nothrow @nogc {
 		return this;
 	}
 
@@ -355,7 +351,7 @@ struct Column(T) {
 	}
 }
 
-unittest {
+@safe unittest {
 	import std.range : isForwardRange;
 	import std.meta : AliasSeq;
 	static foreach(T; AliasSeq!(long,double,DateTime,TimeOfDay,Date,string)) {{
@@ -368,7 +364,7 @@ unittest {
 	}}
 }
 
-Date longToDate(long d) {
+Date longToDate(long d) @safe {
 	// modifed from https://www.codeproject.com/Articles/2750/
 	// Excel-Serial-Date-to-Day-Month-Year-and-Vice-Versa
 
@@ -396,7 +392,7 @@ Date longToDate(long d) {
 	return Date(nYear, nMonth, nDay);
 }
 
-long dateToLong(Date d) {
+long dateToLong(Date d) @safe {
 	// modifed from https://www.codeproject.com/Articles/2750/
 	// Excel-Serial-Date-to-Day-Month-Year-and-Vice-Versa
 
@@ -424,16 +420,16 @@ long dateToLong(Date d) {
 	return nSerialDate;
 }
 
-unittest {
+@safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
-	foreach(d; ds) {
+	foreach(const d; ds) {
 		long l = dateToLong(d);
 		Date r = longToDate(l);
 		assert(r == d, format("%s %s", r, d));
 	}
 }
 
-TimeOfDay doubleToTimeOfDay(double s) {
+TimeOfDay doubleToTimeOfDay(double s) @safe {
 	import core.stdc.math : lround;
 	double secs = (24.0 * 60.0 * 60.0) * s;
 
@@ -443,18 +439,18 @@ TimeOfDay doubleToTimeOfDay(double s) {
 	return TimeOfDay(secI / 3600, (secI / 60) % 60, secI % 60);
 }
 
-double timeOfDayToDouble(TimeOfDay tod) {
+double timeOfDayToDouble(TimeOfDay tod) @safe {
 	long h = tod.hour * 60 * 60;
 	long m = tod.minute * 60;
 	long s = tod.second;
 	return (h + m + s) / (24.0 * 60.0 * 60.0);
 }
 
-unittest {
+@safe unittest {
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
 		 TimeOfDay(23, 59, 59), TimeOfDay(0, 0, 0)];
-	foreach(tod; tods) {
+	foreach(const tod; tods) {
 		double d = timeOfDayToDouble(tod);
 		assert(d <= 1.0, format("%s", d));
 		TimeOfDay r = doubleToTimeOfDay(d);
@@ -462,26 +458,26 @@ unittest {
 	}
 }
 
-double datetimeToDouble(DateTime dt) {
+double datetimeToDouble(DateTime dt) @safe {
 	double d = dateToLong(dt.date);
 	double t = timeOfDayToDouble(dt.timeOfDay);
 	return d + t;
 }
 
-DateTime doubleToDateTime(double d) {
+DateTime doubleToDateTime(double d) @safe {
 	long l = cast(long)d;
 	Date dt = longToDate(l);
 	TimeOfDay t = doubleToTimeOfDay(d - l);
 	return DateTime(dt, t);
 }
 
-unittest {
+@safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
 		 TimeOfDay(23, 59, 59), TimeOfDay(0, 0, 0)];
-	foreach(d; ds) {
-		foreach(tod; tods) {
+	foreach(const d; ds) {
+		foreach(const tod; tods) {
 			DateTime dt = DateTime(d, tod);
 			double dou = datetimeToDouble(dt);
 
@@ -498,7 +494,7 @@ unittest {
 	}
 }
 
-Date stringToDate(string s) {
+Date stringToDate(string s) @safe {
 	import std.array : split;
 	import std.string : indexOf;
 
@@ -523,9 +519,8 @@ Nullable!(T) tryConvertToImpl(T)(Data var) {
 	}
 }
 
-T convertTo(T)(string var) {
+T convertTo(T)(string var) @safe {
 	import std.math : lround;
-
 	static if(isSomeString!T) {
 		return to!T(var);
 	} else static if(is(T == bool)) {
@@ -557,12 +552,9 @@ T convertTo(T)(string var) {
 	}
 }
 
-private ZipArchive readFile(string filename) {
-	enforce(exists(filename), "File with name " ~ filename ~ " does not
-			exist");
-
-	auto file = new ZipArchive(read(filename));
-	return file;
+private ZipArchive readFile(in string filename) @trusted {
+	enforce(exists(filename), "File with name " ~ filename ~ " does not exist");
+	return new typeof(return)(read(filename));
 }
 
 struct SheetNameId {
@@ -571,7 +563,7 @@ struct SheetNameId {
 	string rid;
 }
 
-string convertToString(ubyte[] d) {
+string convertToString(in ubyte[] d) @trusted {
 	import std.encoding;
 	auto b = getBOM(d);
 	switch(b.schema) {
@@ -590,7 +582,7 @@ string convertToString(ubyte[] d) {
 	}
 }
 
-SheetNameId[] sheetNames(string filename) {
+SheetNameId[] sheetNames(in string filename) @trusted {
 	auto file = readFile(filename);
 	auto ams = file.directory;
 	immutable wbStr = "xl/workbook.xml";
@@ -629,13 +621,13 @@ SheetNameId[] sheetNames(string filename) {
 		.release;
 }
 
-unittest {
+@safe unittest {
 	auto r = sheetNames("multitable.xlsx");
 	assert(r[0].name == "wb1");
 	assert(r[0].id == 1);
 }
 
-unittest {
+@safe unittest {
 	auto r = sheetNames("sheetnames.xlsx");
 	assert(r[0].name == "A & B ;", r[0].name);
 	assert(r[0].id == 1);
@@ -646,7 +638,7 @@ struct Relationships {
 	string file;
 }
 
-Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) {
+Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
 	ubyte[] d = za.expand(am);
 	string relData = convertToString(d);
 	auto dom = parseDOM(relData);
@@ -668,7 +660,7 @@ Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) {
 	return ret;
 }
 
-Sheet readSheet(string filename, string sheetName) {
+Sheet readSheet(in string filename, in string sheetName) @safe {
 	SheetNameId[] sheets = sheetNames(filename);
 	auto sRng = sheets.filter!(s => s.name == sheetName);
 	enforce(!sRng.empty, "No sheet with name " ~ sheetName
@@ -676,8 +668,8 @@ Sheet readSheet(string filename, string sheetName) {
 	return readSheetImpl(filename, sRng.front.rid);
 }
 
-string eatXlPrefix(string fn) {
-	foreach(p; ["xl//", "/xl/"]) {
+string eatXlPrefix(string fn) @safe {
+	foreach(const p; ["xl//", "/xl/"]) {
 		if(fn.startsWith(p)) {
 			return fn[p.length .. $];
 		}
@@ -685,7 +677,7 @@ string eatXlPrefix(string fn) {
 	return fn;
 }
 
-Sheet readSheetImpl(string filename, string rid) {
+Sheet readSheetImpl(in string filename, in string rid) @trusted {
 	scope(failure) {
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	}
@@ -718,13 +710,13 @@ Sheet readSheetImpl(string filename, string rid) {
 	}
 	ret.maxPos = maxPos;
 	ret.table = new Cell[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
-	foreach(c; ret.cells) {
+	foreach(const c; ret.cells) {
 		ret.table[c.position.row][c.position.col] = c;
 	}
 	return ret;
 }
 
-string[] readSharedEntries(ZipArchive za, ArchiveMember am) {
+string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 	ubyte[] ss = za.expand(am);
 	string ssData = convertToString(ss);
 	auto dom = parseDOM(ssData);
@@ -795,7 +787,7 @@ string extractData(DOMEntity!string si) {
 	assert(false);
 }
 
-private bool canConvertToLong(string s) {
+private bool canConvertToLong(in string s) @safe {
 	if(s.empty) {
 		return false;
 	}
@@ -805,7 +797,7 @@ private bool canConvertToLong(string s) {
 private immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
 private auto rgx = ctRegex!rs;
 
-private bool canConvertToDoubleOld(string s) {
+private bool canConvertToDoubleOld(in string s) @safe {
 	auto cap = matchAll(s, rgx);
 	return cap.empty || cap.front.hit != s ? false : true;
 }
@@ -849,7 +841,7 @@ private bool canConvertToDouble(string s) pure @safe @nogc {
 	return s.empty;
 }
 
-unittest {
+@safe unittest {
 	static struct Test {
 		string tt;
 		bool rslt;
@@ -863,7 +855,7 @@ unittest {
 		, Test("-0.0", true)
 		, Test("-1100.0", true)
 		];
-	foreach(t; tests) {
+	foreach(const t; tests) {
 		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt)
 				&& canConvertToDouble(t.tt) == t.rslt
 			, format("%s %s %s %s", t.tt
@@ -889,7 +881,7 @@ string removeSpecialCharacter(string s) {
 	string replaceStrings(string s) {
 		import std.algorithm.searching : canFind;
 		import std.array : replace;
-		foreach(tr; toRe) {
+		foreach(const tr; toRe) {
 			while(canFind(s, tr.from)) {
 				s = s.replace(tr.from, tr.to);
 			}
@@ -900,7 +892,7 @@ string removeSpecialCharacter(string s) {
 	return replaceStrings(s);
 }
 
-Cell[] readCells(ZipArchive za, ArchiveMember am) {
+Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 	Cell[] ret;
 	ubyte[] ss = za.expand(am);
 	string ssData = convertToString(ss);
@@ -970,27 +962,27 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) {
 	return ret;
 }
 
-Cell[] insertValueIntoCell(Cell[] cells, string[] ss) {
+Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
 	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach(ref Cell c; cells) {
 		assert(canFind(excepted, c.t) || c.t.empty,
 				format("'%s' not in [%s]", c.t, excepted));
 		if(c.t.empty) {
-			//c.value = convert(c.v);
+			//c.xmlValue = convert(c.v);
 			c.xmlValue = c.v.removeSpecialCharacter();
 		} else if(canFind(same, c.t)) {
-			//c.value = convert(c.v);
+			//c.xmlValue = convert(c.v);
 			c.xmlValue = c.v.removeSpecialCharacter();
 		} else if(c.t == "b") {
 			//logf("'%s' %s", c.v, c);
-			//c.value = c.v == "1";
+			//c.xmlValue = c.v == "1";
 			c.xmlValue = c.v.removeSpecialCharacter();
 		} else {
 			if(!c.v.empty) {
 				size_t idx = to!size_t(c.v);
 				//logf("'%s' %s", c.v, idx);
-				//c.value = ss[idx];
+				//c.xmlValue = ss[idx];
 				c.xmlValue = ss[idx];
 			}
 		}
@@ -998,7 +990,7 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) {
 	return cells;
 }
 
-Pos toPos(string s) {
+Pos toPos(in string s) @safe {
 	import std.string : indexOfAny;
 	import std.math : pow;
 	ptrdiff_t fn = s.indexOfAny("0123456789");
@@ -1006,13 +998,13 @@ Pos toPos(string s) {
 	size_t row = to!size_t(to!long(s[fn .. $]) - 1);
 	size_t col = 0;
 	string colS = s[0 .. fn];
-	foreach(idx, char c; colS) {
+	foreach(const idx, char c; colS) {
 		col = col * 26 + (c - 'A' + 1);
 	}
 	return Pos(row, col - 1);
 }
 
-unittest {
+@safe unittest {
 	assert(toPos("A1").col == 0);
 	assert(toPos("Z1").col == 25);
 	assert(toPos("AA1").col == 26);
@@ -1039,7 +1031,7 @@ string specialCharacterReplacementReverse(string s) {
 		.replace("&amp;", "&");
 }
 
-unittest {
+@safe unittest {
 	import std.math : isClose;
 	auto r = readSheet("multitable.xlsx", "wb1");
 	assert(isClose(r.table[12][5].xmlValue.to!double(), 26.74),
@@ -1051,7 +1043,7 @@ unittest {
 		);
 }
 
-unittest {
+@safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
@@ -1070,7 +1062,7 @@ unittest {
 		.array;
 }
 
-unittest {
+@safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb2");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
@@ -1092,7 +1084,7 @@ unittest {
 	assert(equal(rslt, it2));
 }
 
-unittest {
+@safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
 	writeln(s.table[0][0].xmlValue);
@@ -1104,20 +1096,20 @@ unittest {
 unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
-	foreach(de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
+	foreach(const de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
 			.filter!(a => a.name != "xlsx_files/data03.xlsx"))
 	{
 		//writeln(de.name);
 		auto sn = sheetNames(de.name);
-		foreach(s; sn) {
+		foreach(const s; sn) {
 			auto sheet = readSheet(de.name, s.name);
-			foreach(cell; sheet.cells) {
+			foreach(const cell; sheet.cells) {
 			}
 		}
 	}
 }
 
-unittest {
+@safe unittest {
 	import std.algorithm.comparison : equal;
 	auto sheet = readSheet("testworkbook.xlsx", "ws1");
 	//writefln("%(%s\n%)", sheet.cells);
@@ -1139,7 +1131,7 @@ unittest {
 	assert(equal(c2, r2), format("%s", c2));
 }
 
-unittest {
+@safe unittest {
 	import std.math : isClose;
 	auto sheet = readSheet("toto.xlsx", "Trades");
 	writefln("%(%s\n%)", sheet.cells);
@@ -1150,14 +1142,14 @@ unittest {
 	assert(isClose(d, 38204642.510000));
 }
 
-unittest {
+@safe unittest {
 	auto sheet = readSheet("leading_zeros.xlsx", "Sheet1");
 	auto a2 = sheet.cells.filter!(c => c.r == "A2");
 	assert(!a2.empty);
 	assert(a2.front.xmlValue == "0012", format("%s", a2.front));
 }
 
-unittest {
+@safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("datetimes.xlsx", "Sheet1");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);

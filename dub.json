@@ -4,7 +4,7 @@
 	],
 	"copyright": "Copyright © 2019, Robert burner Schadek",
 	"dependencies": {
-		"dxml": "~>0.4.0"
+	    "dxml": "~>0.4.0"
 	},
 	"description": "A very simple xlsx reader",
 	"license": "LGPL3",
