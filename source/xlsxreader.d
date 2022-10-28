@@ -56,7 +56,6 @@ enum CellType {
 	string_
 }
 
-import std.ascii : toUpper;
 ///
 struct Sheet {
 	import std.ascii : toUpper;
