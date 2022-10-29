@@ -64,12 +64,19 @@ struct Sheet {
 	Cell[][] table;
 	Pos maxPos;
 
-	string toString() const @safe {
-		import std.format : formattedWrite;
+	@property string toString() const @safe {
 		import std.array : appender;
+		auto result = appender!(typeof(return));
+		toString(result);
+		return result.data[];
+	}
+
+
+	void toString(Sink)(ref scope Sink sink) const {
+		import std.format : formattedWrite;
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach(const row; this.table) {
-			foreach(const idx, Cell col; row) {
+			foreach(const idx, const Cell col; row) {
 				string s = col.xmlValue;
 
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
@@ -77,19 +84,15 @@ struct Sheet {
 		}
 		maxCol[] += 1;
 
-		auto app = appender!string();
 		foreach(const row; this.table) {
-			foreach(const idx, Cell col; row) {
-				string s = col.xmlValue;
-				formattedWrite(app, "%*s, ", maxCol[idx], s);
-			}
-			formattedWrite(app, "\n");
+			foreach(const idx, const Cell col; row)
+				sink.formattedWrite("%*s, ", maxCol[idx], col.xmlValue);
+			sink.formattedWrite("\n");
 		}
-		return app.data;
 	}
 
 	void printTable() const @safe {
-		writeln(this.toString());
+		writeln(this);			// uses toString(Sink)
 	}
 
 	// Column
