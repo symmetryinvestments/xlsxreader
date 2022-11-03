@@ -60,8 +60,12 @@ enum CellType {
 struct Sheet {
 	import std.ascii : toUpper;
 
-	Cell[] cells;
-	Cell[][] table;
+	@property const(Cell)[] cells() const @safe pure nothrow @nogc {
+		return _cells;
+	}
+
+	private Cell[] _cells;
+	Cell[][] table;				// TODO: make this read-only and lazily constructed behind a property
 	Pos maxPos;
 
 	@property string toString() const @safe {
@@ -704,9 +708,9 @@ Sheet readSheetImpl(in string filename, in string rid) @trusted {
 				sheetRel.file, fn, ams.keys()));
 
 	Sheet ret;
-	ret.cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
+	ret._cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
 	Pos maxPos;
-	foreach(ref c; ret.cells) {
+	foreach(ref c; ret._cells) {
 		c.position = toPos(c.r);
 		maxPos = elementMax(maxPos, c.position);
 	}
