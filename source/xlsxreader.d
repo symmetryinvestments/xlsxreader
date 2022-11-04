@@ -583,8 +583,7 @@ struct File {
 
         Relationships* sheetRel = rid in rels;
         enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid, filename));
-        string shrFn = eatXlPrefix(sheetRel.file);
-        string fn = "xl/" ~ shrFn;
+        const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
         ArchiveMember* sheet = fn in ams;
         enforce(sheet !is null, format("sheetRel._za orig '%s', fn %s not in [%s]",
                                        sheetRel.file, fn, ams.keys()));
@@ -643,12 +642,12 @@ string convertToString(in ubyte[] d) @trusted {
 
 /// Read sheet names stored in `filename`.
 SheetNameId[] sheetNames(in string filename) @trusted {
-	auto file = readFile(filename);
-	auto ams = file.directory;
+	auto za = readFile(filename);
+	auto ams = za.directory;
 	if (workbookXMLPath !in ams) {
 		return SheetNameId[].init;
 	}
-	ubyte[] wb = file.expand(ams[workbookXMLPath]);
+	ubyte[] wb = za.expand(ams[workbookXMLPath]);
 	string wbData = convertToString(wb);
 
 	auto dom = parseDOM(wbData);
@@ -741,27 +740,26 @@ Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @tru
 	scope(failure) {
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	}
-	auto file = readFile(filename);
-	auto ams = file.directory;
+	auto za = readFile(filename);
+	auto ams = za.directory;
 	immutable ss = sharedStringXMLPath;
 	string[] sharedStrings = (ss in ams)
-		? readSharedEntries(file, ams[ss])
+		? readSharedEntries(za, ams[ss])
 		: [];
 	//logf("%s", sharedStrings);
 
-	Relationships[string] rels = parseRelationships(file,
+	Relationships[string] rels = parseRelationships(za,
 			ams["xl/_rels/workbook.xml.rels"]);
 
 	Relationships* sheetRel = rid in rels;
 	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
 				filename));
-	string shrFn = eatXlPrefix(sheetRel.file);
-	string fn = "xl/" ~ shrFn;
+	const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
 	ArchiveMember* sheet = fn in ams;
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
 				sheetRel.file, fn, ams.keys()));
 
-	auto cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
+	auto cells = insertValueIntoCell(readCells(za, *sheet), sharedStrings);
 
 	Pos maxPos;
 	foreach (ref c; cells) {
