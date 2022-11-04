@@ -607,6 +607,11 @@ struct File {
 	ZipArchive _za;
 }
 
+////
+unittest {
+	auto file = File.fromPath("multitable.xlsx");
+}
+
 /// Sheet name, id and rid.
 struct SheetNameId {
 	string name;
