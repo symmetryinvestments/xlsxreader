@@ -564,6 +564,8 @@ private ZipArchive readFile(in string filename) @trusted {
 	return new typeof(return)(read(filename));
 }
 
+private static immutable workbookXMLPath = "xl/workbook.xml";
+
 /// File.
 struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
@@ -642,11 +644,10 @@ string convertToString(in ubyte[] d) @trusted {
 SheetNameId[] sheetNames(in string filename) @trusted {
 	auto file = readFile(filename);
 	auto ams = file.directory;
-	immutable wbStr = "xl/workbook.xml";
-	if (wbStr !in ams) {
+	if (workbookXMLPath !in ams) {
 		return SheetNameId[].init;
 	}
-	ubyte[] wb = file.expand(ams[wbStr]);
+	ubyte[] wb = file.expand(ams[workbookXMLPath]);
 	string wbData = convertToString(wb);
 
 	auto dom = parseDOM(wbData);
