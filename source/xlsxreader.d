@@ -572,6 +572,24 @@ struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
 		return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
+	auto bySheet() @safe pure nothrow @nogc {
+		struct Result {
+			@property bool empty() const pure nothrow @nogc {
+				return true;
+			}
+			void popFront() pure nothrow @nogc {
+			}
+			@property ref inout(Sheet) front() inout @safe pure nothrow @nogc {
+				return _front;
+			}
+			inout(typeof(this)) save() inout pure nothrow @nogc {
+				return this;
+			}
+            ZipArchive _za;
+			Sheet _front;
+		}
+		return Result(_za);
+	}
 	Sheet readSheet(in string rid) @trusted {
         scope(failure) {
             writefln("Failed at file '%s' and sheet '%s'", _za, rid);
