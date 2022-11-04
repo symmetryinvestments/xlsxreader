@@ -35,14 +35,14 @@ alias Data = Algebraic!(bool,long,double,string,DateTime,Date,TimeOfDay);
 
 /// Sheet Cell.
 struct Cell {
-	string loc;
-	size_t row; // row[r]
+	string loc; ///< Location.
+	size_t row; ///< Row. row[r]
 	string t; // s or n, s for pointer, n for value, stored in v
 	string r; // c[r]
 	string v; // c.v the value or ptr
 	string f; // c.f the formula
-	string xmlValue;
-	Pos position;
+	string xmlValue; ///< Value stored in cell.
+	Pos position; ///< Position of cell.
 }
 
 /// Cell Type.
