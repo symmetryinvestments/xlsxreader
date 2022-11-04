@@ -1,0 +1,18 @@
+name "xlsxreader"
+targetType "library"
+description "A very simple xlsx reader"
+
+authors "Robert burner Schadek"
+license "LGPL3"
+
+dflags "-vcolumns"
+
+importPaths "source"
+
+dependency "dxml" version="~>0.4.0"
+
+buildType "unittest" {
+	buildOptions "unittests" "debugMode" "debugInfo"
+	dflags "-allinst" "-checkaction=context" # TODO: "-preview=dip1000"
+	dflags "-fsanitize=address" platform="posix-ldc"
+}
