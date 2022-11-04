@@ -563,6 +563,48 @@ private ZipArchive readFile(in string filename) @trusted {
 	return new typeof(return)(read(filename));
 }
 
+struct File {
+	static typeof(this) fromPath(in string filename) @trusted {
+		return typeof(return)(filename, new ZipArchive(read(filename)));
+	}
+	Sheet readSheet(in string rid) @trusted { // TODO: use scope ref?
+        scope(failure) {
+            writefln("Failed at file '%s' and sheet '%s'", _za, rid);
+        }
+        auto ams = _za.directory;
+        immutable ss = "xl/sharedStrings.xml";
+        string[] sharedStrings = (ss in ams) ? readSharedEntries(_za, ams[ss]) : [];
+        //logf("%s", sharedStrings);
+
+        Relationships[string] rels = parseRelationships(_za,
+                                                        ams["xl/_rels/workbook.xml.rels"]);
+
+        Relationships* sheetRel = rid in rels;
+        enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid, filename));
+        string shrFn = eatXlPrefix(sheetRel.file);
+        string fn = "xl/" ~ shrFn;
+        ArchiveMember* sheet = fn in ams;
+        enforce(sheet !is null, format("sheetRel._za orig '%s', fn %s not in [%s]",
+                                       sheetRel.file, fn, ams.keys()));
+
+        Sheet ret;
+        ret._cells = insertValueIntoCell(readCells(_za, *sheet), sharedStrings);
+        Pos maxPos;
+        foreach(ref c; ret._cells) {
+            c.position = toPos(c.r);
+            maxPos = elementMax(maxPos, c.position);
+        }
+        ret.maxPos = maxPos;
+        ret.table = new Cell[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
+        foreach(const c; ret.cells) {
+            ret.table[c.position.row][c.position.col] = c;
+        }
+        return ret;
+	}
+	const string filename;
+	ZipArchive _za;
+}
+
 struct SheetNameId {
 	string name;
 	int id;
