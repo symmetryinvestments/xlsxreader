@@ -572,7 +572,7 @@ struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
 		return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
-	Sheet readSheet(in string rid) @trusted { // TODO: use scope ref?
+	Sheet readSheet(in string rid) @trusted {
         scope(failure) {
             writefln("Failed at file '%s' and sheet '%s'", _za, rid);
         }
