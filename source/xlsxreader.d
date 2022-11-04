@@ -64,7 +64,8 @@ struct Sheet {
 		return _cells;
 	}
 
-	private Cell[] _cells;
+	const string name;			///< Name of sheet.
+	private Cell[] _cells;		///< Cells of sheet.
 	Cell[][] table;				// TODO: make this read-only and lazily constructed behind a property
 	Pos maxPos;
 
@@ -587,8 +588,10 @@ struct File {
         enforce(sheet !is null, format("sheetRel._za orig '%s', fn %s not in [%s]",
                                        sheetRel.file, fn, ams.keys()));
 
-        Sheet ret;
-        ret._cells = insertValueIntoCell(readCells(_za, *sheet), sharedStrings);
+        Sheet ret = {
+			name : "",
+			_cells  : insertValueIntoCell(readCells(_za, *sheet), sharedStrings),
+		};
         Pos maxPos;
         foreach(ref c; ret._cells) {
             c.position = toPos(c.r);
@@ -713,7 +716,7 @@ Sheet readSheet(in string filename, in string sheetName) @safe {
 	auto sRng = sheets.filter!(s => s.name == sheetName);
 	enforce(!sRng.empty, "No sheet with name " ~ sheetName
 			~ " found in file " ~ filename);
-	return readSheetImpl(filename, sRng.front.rid);
+	return readSheetImpl(filename, sRng.front.rid, sheetName);
 }
 
 string eatXlPrefix(string fn) @safe {
@@ -725,7 +728,7 @@ string eatXlPrefix(string fn) @safe {
 	return fn;
 }
 
-Sheet readSheetImpl(in string filename, in string rid) @trusted {
+Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @trusted {
 	scope(failure) {
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	}
@@ -749,8 +752,10 @@ Sheet readSheetImpl(in string filename, in string rid) @trusted {
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
 				sheetRel.file, fn, ams.keys()));
 
-	Sheet ret;
-	ret._cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
+	Sheet ret = {
+		name : sheetName,
+		_cells : insertValueIntoCell(readCells(file, *sheet), sharedStrings),
+	};
 	Pos maxPos;
 	foreach(ref c; ret._cells) {
 		c.position = toPos(c.r);
