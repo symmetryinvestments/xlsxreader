@@ -67,7 +67,7 @@ struct Sheet {
 	const string name;			///< Name of sheet.
 	private Cell[] _cells;		///< Cells of sheet.
 	Cell[][] table;				// TODO: make this read-only and lazily constructed behind a property
-	Pos maxPos;
+	const Pos maxPos;
 
 	@property string toString() const @safe {
 		import std.array : appender;
@@ -575,10 +575,7 @@ struct File {
         auto ams = _za.directory;
         immutable ss = "xl/sharedStrings.xml";
         string[] sharedStrings = (ss in ams) ? readSharedEntries(_za, ams[ss]) : [];
-        //logf("%s", sharedStrings);
-
-        Relationships[string] rels = parseRelationships(_za,
-                                                        ams["xl/_rels/workbook.xml.rels"]);
+        Relationships[string] rels = parseRelationships(_za, ams["xl/_rels/workbook.xml.rels"]);
 
         Relationships* sheetRel = rid in rels;
         enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid, filename));
@@ -588,21 +585,22 @@ struct File {
         enforce(sheet !is null, format("sheetRel._za orig '%s', fn %s not in [%s]",
                                        sheetRel.file, fn, ams.keys()));
 
-        Sheet ret = {
-			name : "",
-			_cells  : insertValueIntoCell(readCells(_za, *sheet), sharedStrings),
-		};
+		auto cells = insertValueIntoCell(readCells(_za, *sheet), sharedStrings);
+		Cell[][] table;
         Pos maxPos;
-        foreach(ref c; ret._cells) {
+
+		string name = "";		// TODO: lookup name
+        foreach(ref c; cells) {
             c.position = toPos(c.r);
             maxPos = elementMax(maxPos, c.position);
         }
-        ret.maxPos = maxPos;
-        ret.table = new Cell[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
-        foreach(const c; ret.cells) {
-            ret.table[c.position.row][c.position.col] = c;
+        maxPos = maxPos;
+        table = new Cell[][](maxPos.row + 1, maxPos.col + 1);
+        foreach(const c; cells) {
+            table[c.position.row][c.position.col] = c;
         }
-        return ret;
+
+        return typeof(return)(name, cells, table, maxPos);
 	}
 	const string filename;
 	ZipArchive _za;
@@ -752,21 +750,20 @@ Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @tru
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
 				sheetRel.file, fn, ams.keys()));
 
-	Sheet ret = {
-		name : sheetName,
-		_cells : insertValueIntoCell(readCells(file, *sheet), sharedStrings),
-	};
+	auto cells = insertValueIntoCell(readCells(file, *sheet), sharedStrings);
+
 	Pos maxPos;
-	foreach(ref c; ret._cells) {
+	foreach(ref c; cells) {
 		c.position = toPos(c.r);
 		maxPos = elementMax(maxPos, c.position);
 	}
-	ret.maxPos = maxPos;
-	ret.table = new Cell[][](ret.maxPos.row + 1, ret.maxPos.col + 1);
-	foreach(const c; ret.cells) {
-		ret.table[c.position.row][c.position.col] = c;
+
+	auto table = new Cell[][](maxPos.row + 1, maxPos.col + 1);
+	foreach(const c; cells) {
+		table[c.position.row][c.position.col] = c;
 	}
-	return ret;
+
+	return typeof(return)(sheetName, cells, table, maxPos);
 }
 
 string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
