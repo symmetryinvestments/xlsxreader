@@ -565,6 +565,7 @@ private ZipArchive readFile(in string filename) @trusted {
 }
 
 private static immutable workbookXMLPath = "xl/workbook.xml";
+private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 
 /// File.
 struct File {
@@ -576,7 +577,7 @@ struct File {
             writefln("Failed at file '%s' and sheet '%s'", _za, rid);
         }
         auto ams = _za.directory;
-        immutable ss = "xl/sharedStrings.xml";
+        immutable ss = sharedStringXMLPath;
         string[] sharedStrings = (ss in ams) ? readSharedEntries(_za, ams[ss]) : [];
         Relationships[string] rels = parseRelationships(_za, ams["xl/_rels/workbook.xml.rels"]);
 
@@ -742,7 +743,7 @@ Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @tru
 	}
 	auto file = readFile(filename);
 	auto ams = file.directory;
-	immutable ss = "xl/sharedStrings.xml";
+	immutable ss = sharedStringXMLPath;
 	string[] sharedStrings = (ss in ams)
 		? readSharedEntries(file, ams[ss])
 		: [];
