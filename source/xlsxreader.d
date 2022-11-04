@@ -22,7 +22,7 @@ import std.zip;
 
 import dxml.dom;
 
-///
+/// Cell Position.
 struct Pos {
 	// zero based
 	size_t row;
@@ -30,10 +30,10 @@ struct Pos {
 	size_t col;
 }
 
-///
+/// Cell Data.
 alias Data = Algebraic!(bool,long,double,string,DateTime,Date,TimeOfDay);
 
-///
+/// Sheet Cell.
 struct Cell {
 	string loc;
 	size_t row; // row[r]
@@ -45,7 +45,7 @@ struct Cell {
 	Pos position;
 }
 
-//
+/// Cell Type.
 enum CellType {
 	datetime,
 	timeofday,
@@ -56,7 +56,7 @@ enum CellType {
 	string_
 }
 
-///
+/// Sheet.
 struct Sheet {
 	import std.ascii : toUpper;
 
@@ -263,7 +263,7 @@ struct RowUntyped {
 	}
 }
 
-///
+/// Sheet Row.
 struct Row(T) {
 	RowUntyped ru;
 	T front;
@@ -327,7 +327,7 @@ struct ColumnUntyped {
 	}
 }
 
-///
+/// Sheet Column.
 struct Column(T) {
 	ColumnUntyped cu;
 
@@ -564,6 +564,7 @@ private ZipArchive readFile(in string filename) @trusted {
 	return new typeof(return)(read(filename));
 }
 
+/// File.
 struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
 		return typeof(return)(filename, new ZipArchive(read(filename)));
@@ -606,6 +607,7 @@ struct File {
 	ZipArchive _za;
 }
 
+/// Sheet name, id and rid.
 struct SheetNameId {
 	string name;
 	int id;
@@ -631,6 +633,7 @@ string convertToString(in ubyte[] d) @trusted {
 	}
 }
 
+/// Read sheet names stored in `filename`.
 SheetNameId[] sheetNames(in string filename) @trusted {
 	auto file = readFile(filename);
 	auto ams = file.directory;
@@ -709,6 +712,7 @@ Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trust
 	return ret;
 }
 
+/// Read sheet named `sheetName` from `filename`.
 Sheet readSheet(in string filename, in string sheetName) @safe {
 	SheetNameId[] sheets = sheetNames(filename);
 	auto sRng = sheets.filter!(s => s.name == sheetName);
