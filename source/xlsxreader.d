@@ -570,8 +570,36 @@ struct File {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
-    Sheet[] sheets() @safe pure nothrow @nogc {
-        return typeof(return).init;
+    Sheet[] sheets() {
+		auto ent = workbookXMLPath in _za.directory;
+		if (ent is null)
+			return [];
+
+		auto dom = _za.expand(*ent).convertToString().parseDOM();
+		if (dom.children.length != 1)
+			return [];
+
+		auto workbook = dom.children[0];
+		writeln("workbook:", workbook);
+
+		if (workbook.name != "workbook" &&
+			workbook.name != "s:workbook") {
+			return [];
+		}
+
+		// TODO: sheetDOMName
+		const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
+
+		auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
+		if (sheetsRng.empty) {
+			return [];
+		}
+
+		foreach (const i, sheet; sheetsRng.front.children) {
+			writeln(i, ": sheet:", sheet);
+		}
+
+		return [];
     }
 
 	auto bySheet() @safe pure nothrow @nogc {
@@ -600,7 +628,7 @@ struct File {
 ////
 unittest {
 	File file = File.fromPath("multitable.xlsx");
-	const sheets = file.sheets();
+	auto sheets = file.sheets();
     foreach (sheet; file.bySheet) {
     }
 }
