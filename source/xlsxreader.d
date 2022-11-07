@@ -76,7 +76,6 @@ struct Sheet {
 		return result.data[];
 	}
 
-
 	void toString(Sink)(ref scope Sink sink) const {
 		import std.format : formattedWrite;
 		long[] maxCol = new long[](maxPos.col + 1);
