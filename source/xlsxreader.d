@@ -69,7 +69,7 @@ struct Sheet {
 	Cell[][] table;				// TODO: make this read-only and lazily constructed behind a property
 	const Pos maxPos;
 
-	@property string toString() const @safe {
+	@property string toString() const @safe pure {
 		import std.array : appender;
 		auto result = appender!(typeof(return));
 		toString(result);
