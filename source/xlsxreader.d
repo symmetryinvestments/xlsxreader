@@ -587,9 +587,7 @@ struct File {
 			return [];
 		}
 
-		// TODO: sheetDOMName
 		const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
-
 		auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
 		if (sheetsRng.empty) {
 			return [];
