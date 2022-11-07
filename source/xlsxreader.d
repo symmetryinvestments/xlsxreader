@@ -567,7 +567,9 @@ private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 /// File.
 struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
-		return typeof(return)(filename, new ZipArchive(read(filename)));
+        auto result = typeof(return)(filename, new ZipArchive(read(filename)));
+        writeln(result._za.directory);
+		return result;
 	}
 
 	auto bySheet() @safe pure nothrow @nogc {
@@ -589,47 +591,15 @@ struct File {
 		return Result(_za);
 	}
 
-	Sheet readSheet(in string rid) @trusted {
-        scope(failure) {
-            writefln("Failed at file '%s' and sheet '%s'", _za, rid);
-        }
-        auto ams = _za.directory;
-        immutable ss = sharedStringXMLPath;
-        string[] sharedStrings = (ss in ams) ? readSharedEntries(_za, ams[ss]) : [];
-        Relationships[string] rels = parseRelationships(_za, ams["xl/_rels/workbook.xml.rels"]);
-
-        Relationships* sheetRel = rid in rels;
-        enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid, filename));
-        const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
-        ArchiveMember* sheet = fn in ams;
-        enforce(sheet !is null, format("sheetRel._za orig '%s', fn %s not in [%s]",
-                                       sheetRel.file, fn, ams.keys()));
-
-		auto cells = insertValueIntoCell(readCells(_za, *sheet), sharedStrings);
-		Cell[][] table;
-        Pos maxPos;
-
-		string name = "";		// TODO: lookup name
-        foreach (ref c; cells) {
-            c.position = toPos(c.r);
-            maxPos = elementMax(maxPos, c.position);
-        }
-        maxPos = maxPos;
-        table = new Cell[][](maxPos.row + 1, maxPos.col + 1);
-        foreach (const c; cells) {
-            table[c.position.row][c.position.col] = c;
-        }
-
-        return typeof(return)(name, cells, table, maxPos);
-	}
-
 	const string filename;
 	ZipArchive _za;
 }
 
 ////
 unittest {
-	auto file = File.fromPath("multitable.xlsx");
+	File file = File.fromPath("multitable.xlsx");
+    foreach (sheet; file.bySheet) {
+    }
 }
 
 /// Sheet name, id and rid.
