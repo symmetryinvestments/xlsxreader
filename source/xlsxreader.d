@@ -1,7 +1,6 @@
 module xlsxreader;
 
-import std.algorithm.iteration : filter, map, joiner;
-import std.algorithm.mutation : reverse;
+import std.algorithm.iteration : filter, map;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, replace, popFront;
@@ -11,13 +10,12 @@ import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
 import std.file : read, exists, readText;
 import std.format : format;
-import std.range : tee;
 import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
-import std.typecons : tuple, Nullable, nullable;
+import std.typecons : Nullable, nullable;
 import std.utf : byChar;
-import std.variant : Algebraic, visit;
+import std.variant : Algebraic;
 import std.zip;
 
 import dxml.dom;
