@@ -79,7 +79,7 @@ struct Sheet {
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach (const row; this.table) {
 			foreach (const idx, const Cell col; row) {
-				string s = col.xmlValue;
+				const string s = col.xmlValue;
 
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
 			}
@@ -384,15 +384,15 @@ Date longToDate(long d) @safe {
 
 	// Modified Julian to DMY calculation with an addition of 2415019
 	int l = cast(int)d + 68569 + 2415019;
-	int n = int(( 4 * l ) / 146097);
+	const int n = int(( 4 * l ) / 146097);
 	l = l - int(( 146097 * n + 3 ) / 4);
-	int i = int(( 4000 * ( l + 1 ) ) / 1461001);
+	const int i = int(( 4000 * ( l + 1 ) ) / 1461001);
 	l = l - int(( 1461 * i ) / 4) + 31;
-	int j = int(( 80 * l ) / 2447);
-	int nDay = l - int(( 2447 * j ) / 80);
+	const int j = int(( 80 * l ) / 2447);
+	const nDay = l - int(( 2447 * j ) / 80);
 	l = int(j / 11);
-	int nMonth = j + 2 - ( 12 * l );
-	int nYear = 100 * ( n - 49 ) + i + l;
+	const int nMonth = j + 2 - ( 12 * l );
+	const int nYear = 100 * ( n - 49 ) + i + l;
 	return Date(nYear, nMonth, nDay);
 }
 
@@ -427,26 +427,26 @@ long dateToLong(Date d) @safe {
 @safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
 	foreach (const d; ds) {
-		long l = dateToLong(d);
-		Date r = longToDate(l);
+		const long l = dateToLong(d);
+		const Date r = longToDate(l);
 		assert(r == d, format("%s %s", r, d));
 	}
 }
 
 TimeOfDay doubleToTimeOfDay(double s) @safe {
 	import core.stdc.math : lround;
-	double secs = (24.0 * 60.0 * 60.0) * s;
+	const double secs = (24.0 * 60.0 * 60.0) * s;
 
 	// TODO not one-hundred my lround is needed
-	int secI = to!int(lround(secs));
+	const int secI = to!int(lround(secs));
 
 	return TimeOfDay(secI / 3600, (secI / 60) % 60, secI % 60);
 }
 
 double timeOfDayToDouble(TimeOfDay tod) @safe {
-	long h = tod.hour * 60 * 60;
-	long m = tod.minute * 60;
-	long s = tod.second;
+	const long h = tod.hour * 60 * 60;
+	const long m = tod.minute * 60;
+	const long s = tod.second;
 	return (h + m + s) / (24.0 * 60.0 * 60.0);
 }
 
@@ -455,7 +455,7 @@ double timeOfDayToDouble(TimeOfDay tod) @safe {
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
 		 TimeOfDay(23, 59, 59), TimeOfDay(0, 0, 0)];
 	foreach (const tod; tods) {
-		double d = timeOfDayToDouble(tod);
+		const double d = timeOfDayToDouble(tod);
 		assert(d <= 1.0, format("%s", d));
 		TimeOfDay r = doubleToTimeOfDay(d);
 		assert(r == tod, format("%s %s", r, tod));
@@ -463,8 +463,8 @@ double timeOfDayToDouble(TimeOfDay tod) @safe {
 }
 
 double datetimeToDouble(DateTime dt) @safe {
-	double d = dateToLong(dt.date);
-	double t = timeOfDayToDouble(dt.timeOfDay);
+	const double d = dateToLong(dt.date);
+	const double t = timeOfDayToDouble(dt.timeOfDay);
 	return d + t;
 }
 
@@ -549,7 +549,7 @@ T convertTo(T)(string var) @safe {
 		}
 		return stringToDate(var);
 	} else static if (is(T == TimeOfDay)) {
-		double l = to!double(var);
+		const double l = to!double(var);
 		return doubleToTimeOfDay(l - cast(long)l);
 	} else {
 		static assert(false, T.stringof ~ " not supported");
@@ -614,7 +614,7 @@ struct SheetNameId {
 
 string convertToString(in ubyte[] d) @trusted {
 	import std.encoding;
-	auto b = getBOM(d);
+	const b = getBOM(d);
 	switch(b.schema) {
 		case BOM.none:
 			return cast(string)d;
@@ -646,7 +646,7 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 		return [];
 	}
 	auto workbook = dom.children[0];
-	string sheetName = workbook.name == "workbook"
+	const string sheetName = workbook.name == "workbook"
 		? "sheets" : "s:sheets";
 	if (workbook.name != "workbook" && workbook.name != "s:workbook") {
 		return [];
@@ -711,7 +711,7 @@ Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trust
 
 /// Read sheet named `sheetName` from `filename`.
 Sheet readSheet(in string filename, in string sheetName) @safe {
-	SheetNameId[] sheets = sheetNames(filename);
+	const SheetNameId[] sheets = sheetNames(filename);
 	auto sRng = sheets.filter!(s => s.name == sheetName);
 	enforce(!sRng.empty, "No sheet with name " ~ sheetName
 			~ " found in file " ~ filename);
@@ -739,10 +739,10 @@ Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @tru
 		: [];
 	//logf("%s", sharedStrings);
 
-	Relationships[string] rels = parseRelationships(za,
+	const Relationships[string] rels = parseRelationships(za,
 			ams["xl/_rels/workbook.xml.rels"]);
 
-	Relationships* sheetRel = rid in rels;
+	const Relationships* sheetRel = rid in rels;
 	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
 				filename));
 	const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
@@ -1188,12 +1188,12 @@ unittest {
 
 	auto r = sheet.getRowString(1, 0, 2).array;
 
-	double d = to!double(r[1]);
+	const double d = to!double(r[1]);
 	assert(isClose(d, 38204642.510000));
 }
 
 @safe unittest {
-	auto sheet = readSheet("leading_zeros.xlsx", "Sheet1");
+	const sheet = readSheet("leading_zeros.xlsx", "Sheet1");
 	auto a2 = sheet.cells.filter!(c => c.r == "A2");
 	assert(!a2.empty);
 	assert(a2.front.xmlValue == "0012", format("%s", a2.front));
