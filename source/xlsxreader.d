@@ -567,10 +567,12 @@ private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 /// File.
 struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
-        auto result = typeof(return)(filename, new ZipArchive(read(filename)));
-        writeln(result._za.directory);
-		return result;
+        return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
+
+    Sheet[] sheets() @safe pure nothrow @nogc {
+        return typeof(return).init;
+    }
 
 	auto bySheet() @safe pure nothrow @nogc {
 		struct Result {
@@ -598,6 +600,7 @@ struct File {
 ////
 unittest {
 	File file = File.fromPath("multitable.xlsx");
+	const sheets = file.sheets();
     foreach (sheet; file.bySheet) {
     }
 }
