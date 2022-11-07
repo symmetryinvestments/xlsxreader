@@ -569,6 +569,7 @@ struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
 		return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
+
 	auto bySheet() @safe pure nothrow @nogc {
 		struct Result {
 			@property bool empty() const pure nothrow @nogc {
@@ -587,6 +588,7 @@ struct File {
 		}
 		return Result(_za);
 	}
+
 	Sheet readSheet(in string rid) @trusted {
         scope(failure) {
             writefln("Failed at file '%s' and sheet '%s'", _za, rid);
@@ -620,6 +622,7 @@ struct File {
 
         return typeof(return)(name, cells, table, maxPos);
 	}
+
 	const string filename;
 	ZipArchive _za;
 }
