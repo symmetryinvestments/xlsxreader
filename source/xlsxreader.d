@@ -749,7 +749,7 @@ Sheet readSheet(in string filename, in string sheetName) @safe {
 	return readSheetImpl(filename, sRng.front.rid, sheetName);
 }
 
-string eatXlPrefix(string fn) @safe {
+string eatXlPrefix(scope return string fn) @safe pure nothrow @nogc {
     static immutable xlPrefixes = ["xl//", "/xl/"];
 	foreach (const p; xlPrefixes) {
 		if (fn.startsWith(p)) {
