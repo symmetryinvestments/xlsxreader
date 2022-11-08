@@ -103,7 +103,7 @@ struct Sheet {
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
+	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) @trusted {
 		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
@@ -147,12 +147,12 @@ struct Sheet {
 
 	// Row
 
-	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(this.iterateRow!T(row, startColumn, endColumn).array); // TODO: why .array?
 	}
 
 	private enum t2 = q{
-	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
