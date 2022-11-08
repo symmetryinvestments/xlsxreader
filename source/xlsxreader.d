@@ -649,18 +649,18 @@ struct File {
 version(benchmark)
 @safe unittest {
 	import std.meta : AliasSeq;
-    static void iterateSheets_multitable() @trusted {
+    static void bySheet_multitable() @trusted {
         File file = File.fromPath("multitable.xlsx");
         foreach (ref Sheet sheet; file.bySheet) {
         }
     }
-    static void iterateSheets_five_large_sheets() @trusted {
+    static void bySheet_five_large_sheets() @trusted {
         File file = File.fromPath("five_large_sheets.xlsx");
         foreach (ref Sheet sheet; file.bySheet) {
         }
     }
-	alias funs = AliasSeq!(iterateSheets_multitable,
-						   iterateSheets_five_large_sheets);
+	alias funs = AliasSeq!(bySheet_multitable,
+						   bySheet_five_large_sheets);
 	auto results = benchmarkMin!(funs)(3);
 	foreach (const i, fun; funs) {
 		writeln(fun.stringof, " took ", results[i]);
