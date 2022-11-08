@@ -595,18 +595,12 @@ struct File {
 	}
 
     auto bySheet() @safe {
-		auto ent = workbookXMLPath in _za.directory;
-		version(none)			// TODO: activate
-			if (ent is null)
-				return [];
-
-		auto dom = _za.expandTrusted(*ent).convertToString().parseDOM();
+		auto dom = getDOM();
 		version(none)			// TODO: activate
 			if (dom.children.length != 1)
 				return [];
 
 		auto workbook = dom.children[0];
-
 		version(none)			// TODO: activate
 			if (workbook.name != "workbook" &&
 				workbook.name != "s:workbook")
@@ -633,6 +627,16 @@ struct File {
 			});
     }
 
+	DOMEntity!string getDOM() @safe {
+		auto ent = workbookXMLPath in _za.directory;
+		// TODO: use enforce(ent ! is null); instead?
+		if (ent is null)
+			return typeof(return).init;
+		if (_dom == _dom.init)
+			_dom = _za.expandTrusted(*ent).convertToString().parseDOM();
+		return _dom;
+	}
+
 	private RelationshipsById relationships() @safe {
 		if (_rels is null)
 			_rels = parseRelationships(_za, _za.directory[relsXMLPath]);
@@ -641,6 +645,7 @@ struct File {
 
 	const string filename;
 	private ZipArchive _za;
+	DOMEntity!string _dom;
 	private RelationshipsById _rels;
 }
 
@@ -655,19 +660,25 @@ version(benchmark)
     }
     static void use_bySheet_five_large_sheets() @trusted {
         File file = File.fromPath("five_large_sheets.xlsx");
+		size_t i = 0;
         foreach (ref sheet; file.bySheet) {
-			writeln("sheet:", sheet);
+			// writeln(__FUNCTION__, ": sheet nr i:", i);
+			i++;
         }
     }
 	static void use_sheetNamesAndreadSheet_five_large_sheets() @trusted {
 		const path = "five_large_sheets.xlsx";
-		foreach (const ref s; sheetNames(path))
+		size_t i = 0;
+		foreach (const ref s; sheetNames(path)) {
 			auto sheet = readSheet(path, s.name);
+			// writeln(__FUNCTION__, ": sheet nr i:", i);
+			i++;
+		}
 	}
-	alias funs = AliasSeq!(use_bySheet_multitable,
-						   use_bySheet_five_large_sheets,
-						   use_sheetNamesAndreadSheet_five_large_sheets);
-	auto results = benchmarkMin!(funs)(10);
+	alias funs = AliasSeq!(use_sheetNamesAndreadSheet_five_large_sheets,
+						   use_bySheet_multitable,
+						   use_bySheet_five_large_sheets);
+	auto results = benchmarkMin!(funs)(3);
 	foreach (const i, fun; funs) {
 		writeln(fun.stringof, " took ", results[i]);
 	}
