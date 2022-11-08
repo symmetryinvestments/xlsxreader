@@ -1101,7 +1101,8 @@ Pos elementMax(Pos a, Pos b) {
 			a.col < b.col ? b.col : a.col);
 }
 
-string specialCharacterReplacement(string s) {
+string specialCharacterReplacement(string s) @safe pure nothrow {
+	import std.algorithm.iteration : substitute;
     import std.array : replace;
 	// TODO: use substitute.array
 	return s.replace("\"", "&quot;")
@@ -1109,6 +1110,10 @@ string specialCharacterReplacement(string s) {
 		.replace("<", "&lt;")
 		.replace(">", "&gt;")
 		.replace("&", "&amp;");
+}
+
+@safe pure nothrow unittest {
+	assert("&".specialCharacterReplacement == "&amp;");
 }
 
 string specialCharacterReplacementReverse(string s) {
