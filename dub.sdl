@@ -18,3 +18,9 @@ buildType "unittest" {
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 	dflags "-fsanitize=address" platform="posix-ldc"
 }
+
+buildType "release-unittest" {
+	buildOptions "unittests" "releaseMode" "optimize" "inline"
+	dflags "-allinst" "-checkaction=context"
+	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+}
