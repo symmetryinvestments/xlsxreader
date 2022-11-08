@@ -3,7 +3,7 @@ module xlsxreader;
 import std.algorithm.iteration : filter, map;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
-import std.array : array, empty, front, replace, popFront;
+import std.array : array, empty, front, popFront;
 import std.ascii : isDigit;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
@@ -964,6 +964,7 @@ string removeSpecialCharacter(string s) {
 
 	string replaceStrings(string s) {
 		import std.algorithm.searching : canFind;
+		// TODO: use substitute.array
 		import std.array : replace;
 		foreach (const tr; toRe) {
 			while (canFind(s, tr.from)) {
@@ -1100,6 +1101,8 @@ Pos elementMax(Pos a, Pos b) {
 }
 
 string specialCharacterReplacement(string s) {
+    import std.array : replace;
+	// TODO: use substitute.array
 	return s.replace("\"", "&quot;")
 		.replace("'", "&apos;")
 		.replace("<", "&lt;")
@@ -1108,6 +1111,8 @@ string specialCharacterReplacement(string s) {
 }
 
 string specialCharacterReplacementReverse(string s) {
+    import std.array : replace;
+	// TODO: use substitute.array
 	return s.replace("&quot;", "\"")
 		.replace("&apos;", "'")
 		.replace("&lt;", "<")
