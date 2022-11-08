@@ -43,7 +43,7 @@ alias Data = Algebraic!(bool, long, double, string, DateTime, Date, TimeOfDay);
 /// Sheet Cell.
 struct Cell {
 	string loc; ///< Location.
-	size_t row; ///< Row. row[r]
+	RowOffset row; ///< Row. row[r]
 	string t; // s or n, s for pointer, n for value, stored in v
 	string r; // c[r]
 	string v; // c.v the value or ptr
@@ -1008,7 +1008,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 		foreach (ref c; row.children.filter!(r => r.name == "c")) {
 			Cell tmp;
 			tmp.row = row.attributes.filter!(a => a.name == "r")
-				.front.value.to!size_t();
+				.front.value.to!RowOffset();
 			tmp.r = c.attributes.filter!(a => a.name == "r")
 				.front.value;
 			auto t = c.attributes.filter!(a => a.name == "t");
