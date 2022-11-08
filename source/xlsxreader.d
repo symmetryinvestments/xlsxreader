@@ -770,11 +770,10 @@ Sheet readSheetImpl(in string filename,
 private Sheet extractSheet(ZipArchive za, in string filename,
                            in string rid, in string sheetName) @trusted {
 	auto ams = za.directory;
-	immutable ss = sharedStringXMLPath;
-	string[] sharedStrings = (ss in ams)
-		? readSharedEntries(za, ams[ss])
-		: [];
-	//logf("%s", sharedStrings);
+	string[] ss;
+	if (ArchiveMember* amPtr = sharedStringXMLPath in ams)
+		ss = readSharedEntries(za, *amPtr);
+	//logf("%s", ss);
 
 	const Relationships[string] rels = parseRelationships(za, // TODO: factor out
 			ams["xl/_rels/workbook.xml.rels"]);
@@ -787,7 +786,7 @@ private Sheet extractSheet(ZipArchive za, in string filename,
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
 				sheetRel.file, fn, ams.keys()));
 
-	auto cells = insertValueIntoCell(readCells(za, *sheet), sharedStrings);
+	auto cells = insertValueIntoCell(readCells(za, *sheet), ss);
 
 	Pos maxPos;
 	foreach (ref c; cells) {
