@@ -583,19 +583,27 @@ struct File {
 		writeln("workbook:", workbook);
 
 		if (workbook.name != "workbook" &&
-			workbook.name != "s:workbook") {
+			workbook.name != "s:workbook")
 			return [];
-		}
 
 		const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
 		auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
-		if (sheetsRng.empty) {
+		if (sheetsRng.empty)
 			return [];
-		}
 
-		foreach (const i, sheet; sheetsRng.front.children) {
+		foreach (const i, sheet; sheetsRng.front.children)
 			writeln(i, ": sheet:", sheet);
-		}
+
+		auto rng = sheetsRng.front.children
+		                     .map!(s => SheetNameId(
+					s.attributes.filter!(a => a.name == "name").front.value
+						.specialCharacterReplacementReverse(),
+					s.attributes.filter!(a => a.name == "sheetId").front
+						.value.to!int(),
+					s.attributes.filter!(a => a.name == "r:id").front.value,
+				)
+		);
+
 
 		return [];
     }
