@@ -66,7 +66,7 @@ enum CellType {
 struct Sheet {
 	import std.ascii : toUpper;
 
-	@property const(Cell)[] cells() const @safe pure nothrow @nogc {
+	@property const(Cell)[] cells() const return scope @safe pure nothrow @nogc {
 		return _cells;
 	}
 
@@ -75,14 +75,14 @@ struct Sheet {
 	Cell[][] table;				// TODO: make this read-only and lazily constructed behind a property
 	const Pos maxPos;
 
-	@property string toString() const @safe pure {
+	@property string toString() const scope @safe pure {
 		import std.array : appender;
 		auto result = appender!(typeof(return));
 		toString(result);
 		return result.data[];
 	}
 
-	void toString(Sink)(ref scope Sink sink) const {
+	void toString(Sink)(ref scope Sink sink) const scope {
 		import std.format : formattedWrite;
 		long[] maxCol = new long[](maxPos.col + 1);
 		foreach (const row; this.table) {
@@ -101,19 +101,19 @@ struct Sheet {
 		}
 	}
 
-	void printTable() const @trusted {
+	void printTable() const scope @trusted {
 		writeln(this);			// uses toString(Sink)
 	}
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) @trusted {
+	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		auto c = this.iterateColumn!T(col, startRow, endRow);
 		return typeof(return)(c.array);
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) @trusted {
+	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
@@ -123,46 +123,46 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @trusted {
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @trusted {
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) return scope @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
 	// Row
 
-	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(this.iterateRow!T(row, startColumn, endColumn).array); // TODO: why .array?
 	}
 
 	private enum t2 = q{
-	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
@@ -172,35 +172,35 @@ struct Sheet {
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @trusted {
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) return scope @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
