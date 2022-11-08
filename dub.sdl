@@ -10,9 +10,10 @@ dflags "-vcolumns"
 importPaths "source"
 
 dependency "dxml" version="~>0.4.0"
+dependency "mir-core" version="*"
 
 buildType "unittest" {
 	buildOptions "unittests" "debugMode" "debugInfo"
-	dflags "-allinst" "-checkaction=context" # TODO: "-preview=dip1000"
+	dflags "-allinst" "-checkaction=context" "-preview=dip1000"
 	dflags "-fsanitize=address" platform="posix-ldc"
 }
