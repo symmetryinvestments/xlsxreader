@@ -721,8 +721,7 @@ struct Relationships {
 }
 
 Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
-	ubyte[] d = za.expand(am);
-	string relData = convertToString(d);
+	string relData = za.expandTrusted(am).convertToString;
 	auto dom = parseDOM(relData);
 	assert(dom.children.length == 1);
 	auto rel = dom.children[0];
