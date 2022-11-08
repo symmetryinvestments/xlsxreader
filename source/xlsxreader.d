@@ -4,7 +4,6 @@ import std.algorithm.iteration : filter, map;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, popFront;
-import std.ascii : isDigit;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
@@ -14,7 +13,6 @@ import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : Nullable, nullable;
-import std.utf : byChar;
 import mir.algebraic : Algebraic;
 import std.zip;
 
@@ -872,6 +870,8 @@ string extractData(DOMEntity!string si) {
 }
 
 private bool canConvertToLong(in string s) @safe {
+	import std.utf : byChar;
+	import std.ascii : isDigit;
 	if (s.empty) {
 		return false;
 	}
