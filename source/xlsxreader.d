@@ -665,16 +665,16 @@ version(benchmark)
         foreach (ref sheet; file.bySheet) {
         }
     }
-    static void use_bySheet_five_large_sheets() @trusted {
-        File file = File.fromPath("five_large_sheets.xlsx");
+    static void use_bySheet_big5() @trusted {
+        File file = File.fromPath("big5.xlsx");
 		size_t i = 0;
         foreach (ref sheet; file.bySheet) {
 			// writeln(__FUNCTION__, ": sheet nr i:", i);
 			i++;
         }
     }
-	static void use_sheetNamesAndreadSheet_five_large_sheets() @trusted {
-		const path = "five_large_sheets.xlsx";
+	static void use_sheetNamesAndreadSheet_big5() @trusted {
+		const path = "big5.xlsx";
 		size_t i = 0;
 		foreach (const ref s; sheetNames(path)) {
 			auto sheet = readSheet(path, s.name);
@@ -682,9 +682,9 @@ version(benchmark)
 			i++;
 		}
 	}
-	alias funs = AliasSeq!(use_sheetNamesAndreadSheet_five_large_sheets,
-						   use_bySheet_multitable,
-						   use_bySheet_five_large_sheets);
+	alias funs = AliasSeq!(use_bySheet_multitable,
+						   use_sheetNamesAndreadSheet_big5,
+						   use_bySheet_big5);
 	auto results = benchmarkMin!(funs)(3);
 	foreach (const i, fun; funs) {
 		writeln(fun.stringof, " took ", results[i]);
@@ -998,11 +998,12 @@ private bool canConvertToDouble(string s) pure @safe nothrow @nogc {
 		, Test("-1100.0", true)
 		];
 	foreach (const t; tests) {
-		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt)
-				&& canConvertToDouble(t.tt) == t.rslt
-			, format("%s %s %s %s", t.tt
-				, canConvertToDouble(t.tt), canConvertToDoubleOld(t.tt)
-				, t.rslt));
+		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt) &&
+               canConvertToDouble(t.tt) == t.rslt,
+               format("%s %s %s %s", t.tt,
+                      canConvertToDouble(t.tt),
+                      canConvertToDoubleOld(t.tt),
+                      t.rslt));
 	}
 }
 
