@@ -1106,24 +1106,32 @@ string specialCharacterReplacement(string s) @safe pure nothrow {
     import std.array : replace;
 	// TODO: use substitute.array
 	return s.replace("\"", "&quot;")
-		.replace("'", "&apos;")
-		.replace("<", "&lt;")
-		.replace(">", "&gt;")
-		.replace("&", "&amp;");
+			.replace("'", "&apos;")
+			.replace("<", "&lt;")
+			.replace(">", "&gt;")
+			.replace("&", "&amp;");
 }
 
 @safe pure nothrow unittest {
 	assert("&".specialCharacterReplacement == "&amp;");
 }
 
-string specialCharacterReplacementReverse(string s) {
+string specialCharacterReplacementReverse(string s) @safe pure nothrow {
     import std.array : replace;
 	// TODO: use substitute.array
 	return s.replace("&quot;", "\"")
-		.replace("&apos;", "'")
-		.replace("&lt;", "<")
-		.replace("&gt;", ">")
-		.replace("&amp;", "&");
+			.replace("&apos;", "'")
+			.replace("&lt;", "<")
+			.replace("&gt;", ">")
+			.replace("&amp;", "&");
+}
+
+@safe pure nothrow unittest {
+	assert("&quot;".specialCharacterReplacementReverse == "\"");
+	assert("&apos;".specialCharacterReplacementReverse == "'");
+	assert("&lt;".specialCharacterReplacementReverse == "<");
+	assert("&gt;".specialCharacterReplacementReverse == ">");
+	assert("&amp;".specialCharacterReplacementReverse == "&");
 }
 
 @safe unittest {
