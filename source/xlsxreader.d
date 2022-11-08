@@ -619,8 +619,10 @@ struct File {
 					s.attributes.filter!(a => a.name == "r:id").front.value,
 				)
                              );
+
+		auto rels = parseRelationships(_za, _za.directory["xl/_rels/workbook.xml.rels"]);
         return sheetNameIds.map!((const scope SheetNameId sheetNameId) {
-                return extractSheet(_za, filename, sheetNameId.rid, sheetNameId.name);
+                return extractSheet(_za, rels, filename, sheetNameId.rid, sheetNameId.name);
 			});
     }
 
@@ -764,19 +766,20 @@ Sheet readSheetImpl(in string filename,
                     in string rid, in string sheetName) @safe {
 	scope(failure)
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
-    return extractSheet(readFile(filename), filename, rid, sheetName);
+	auto za = readFile(filename);
+	auto rels = parseRelationships(za, za.directory["xl/_rels/workbook.xml.rels"]);
+    return extractSheet(za, rels, filename, rid, sheetName);
 }
 
-private Sheet extractSheet(ZipArchive za, in string filename,
+private Sheet extractSheet(ZipArchive za,
+						   in Relationships[string] rels,
+						   in string filename,
                            in string rid, in string sheetName) @trusted {
 	auto ams = za.directory;
 	string[] ss;
 	if (ArchiveMember* amPtr = sharedStringXMLPath in ams)
 		ss = readSharedEntries(za, *amPtr);
 	//logf("%s", ss);
-
-	const Relationships[string] rels = parseRelationships(za, // TODO: factor out
-			ams["xl/_rels/workbook.xml.rels"]);
 
 	const Relationships* sheetRel = rid in rels;
 	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
