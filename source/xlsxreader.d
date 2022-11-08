@@ -750,7 +750,8 @@ Sheet readSheet(in string filename, in string sheetName) @safe {
 }
 
 string eatXlPrefix(string fn) @safe {
-	foreach (const p; ["xl//", "/xl/"]) {
+    static immutable xlPrefixes = ["xl//", "/xl/"];
+	foreach (const p; xlPrefixes) {
 		if (fn.startsWith(p)) {
 			return fn[p.length .. $];
 		}
