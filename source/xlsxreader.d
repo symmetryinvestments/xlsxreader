@@ -583,12 +583,6 @@ struct File {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
-	Relationships[string] relationships() @safe {
-		if (_rels is null)
-			_rels = parseRelationships(_za, _za.directory["xl/_rels/workbook.xml.rels"]);
-		return _rels;
-	}
-
     auto bySheet() @safe {
 		auto ent = workbookXMLPath in _za.directory;
 		version(none)			// TODO: activate
@@ -627,6 +621,12 @@ struct File {
                 return extractSheet(_za, relationships, filename, sheetNameId.rid, sheetNameId.name);
 			});
     }
+
+	private Relationships[string] relationships() @safe {
+		if (_rels is null)
+			_rels = parseRelationships(_za, _za.directory["xl/_rels/workbook.xml.rels"]);
+		return _rels;
+	}
 
 	const string filename;
 	private ZipArchive _za;
