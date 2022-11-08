@@ -584,25 +584,25 @@ struct File {
 
     auto bySheet() @safe {
 		auto ent = workbookXMLPath in _za.directory;
-		version(none)
+		version(none)			// TODO: activate
 			if (ent is null)
 				return [];
 
 		auto dom = _za.expandTrusted(*ent).convertToString().parseDOM();
-		version(none)
+		version(none)			// TODO: activate
 			if (dom.children.length != 1)
 				return [];
 
 		auto workbook = dom.children[0];
 
-		version(none)
+		version(none)			// TODO: activate
 			if (workbook.name != "workbook" &&
 				workbook.name != "s:workbook")
 				return [];
 
 		const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
 		auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
-		version(none)
+		version(none)			// TODO: activate
 			if (sheetsRng.empty)
 				return [];
 
