@@ -1102,6 +1102,7 @@ Pos elementMax(Pos a, Pos b) @safe pure nothrow @nogc {
                max(a.col, b.col));
 }
 
+deprecated("this function is unused and will therefore be removed")
 string specialCharacterReplacement(string s) @safe pure nothrow {
 	import std.algorithm.iteration : substitute;
     import std.array : replace;
