@@ -1098,7 +1098,7 @@ Pos toPos(in string s) @safe pure {
 
 Pos elementMax(Pos a, Pos b) @safe pure nothrow @nogc {
 	return Pos(a.row < b.row ? b.row : a.row,
-			a.col < b.col ? b.col : a.col);
+               a.col < b.col ? b.col : a.col);
 }
 
 string specialCharacterReplacement(string s) @safe pure nothrow {
