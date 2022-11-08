@@ -887,7 +887,7 @@ version(unittest)
 	}
 }
 
-private bool canConvertToDouble(string s) pure @safe @nogc {
+private bool canConvertToDouble(string s) pure @safe nothrow @nogc {
 	if (s.startsWith('+') || s.startsWith('-')) {
 		s = s[1 .. $];
 	}
