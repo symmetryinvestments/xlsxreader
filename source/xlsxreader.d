@@ -35,7 +35,6 @@ struct Pos {
 	RowOffset row;
 	ColOffset col;
 }
-static assert(Pos.sizeof == 8);
 
 /// Cell Data.
 alias Data = Algebraic!(bool, long, double, string, DateTime, Date, TimeOfDay);
@@ -51,7 +50,6 @@ struct Cell {
 	string xmlValue; ///< Value stored in cell.
 	Pos position; ///< Position of cell.
 }
-static assert(Cell.sizeof == 112);
 
 /// Cell Type.
 enum CellType {
@@ -63,7 +61,6 @@ enum CellType {
 	long_,
 	string_
 }
-static assert(CellType.sizeof == 4);
 
 /// Sheet.
 struct Sheet {
@@ -207,7 +204,6 @@ struct Sheet {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
-static assert(Sheet.sizeof == 56);
 
 struct Iterator(T) {
 	T[] data;
