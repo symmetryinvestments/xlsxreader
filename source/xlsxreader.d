@@ -745,21 +745,26 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 
 RelationshipsById parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
 	auto dom = za.expandTrusted(am).convertToString.parseDOM;
-	assert(dom.children.length == 1);
+	enforce(dom.children.length == 1,
+			"Expected a single DOM child but got " ~ dom.children.length.to!string);
+
 	auto rel = dom.children[0];
-	assert(rel.name == "Relationships");
-	auto relRng = rel.children.filter!(c => c.name == "Relationship");
-	assert(!relRng.empty);
+	enforce(rel.name == "Relationships",
+			"Expected rel.name to be \"Relationships\" but was " ~ rel.name);
 
 	typeof(return) ret;
-	foreach (r; relRng) {
+	static if (is(typeof(ret.reserve(size_t.init)) == void)) {
+		/* Use reserve() when AA gets it or `RelationshipsById` is a custom hash
+		 * map. */
+		ret.reserve(rel.children.length);
+	}
+	foreach (ref r; rel.children.filter!(c => c.name == "Relationship")) {
 		Relationships tmp;
-		tmp.id = r.attributes.filter!(a => a.name == "Id")
-			.front.value;
-		tmp.file = r.attributes.filter!(a => a.name == "Target")
-			.front.value;
+		tmp.id = r.attributes.filter!(a => a.name == "Id").front.value;
+		tmp.file = r.attributes.filter!(a => a.name == "Target").front.value;
 		ret[tmp.id] = tmp;
 	}
+	enforce(!ret.empty);
 	return ret;
 }
 
