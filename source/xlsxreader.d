@@ -18,7 +18,7 @@ import std.zip;
 
 import dxml.dom;
 
-/// Cell Position.
+/// Cell Position. TODO: use uint if that’s what other libraries use
 struct Pos {
 	// zero based
 	size_t row;
