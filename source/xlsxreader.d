@@ -614,8 +614,6 @@ struct File {
 unittest {
 	File file = File.fromPath("multitable.xlsx");
 	auto sheets = file.sheets();
-    foreach (sheet; file.bySheet) {
-    }
 }
 
 /// Sheet name, id and rid.
@@ -740,11 +738,13 @@ string eatXlPrefix(string fn) @safe {
 	return fn;
 }
 
-Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @trusted {
-	scope(failure) {
+Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @safe {
+	scope(failure)
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
-	}
-	auto za = readFile(filename);
+    return readSheetImplFromArchive(readFile(filename), filename, rid, sheetName);
+}
+
+private Sheet readSheetImplFromArchive(ZipArchive za, in string filename, in string rid, in string sheetName) @trusted {
 	auto ams = za.directory;
 	immutable ss = sharedStringXMLPath;
 	string[] sharedStrings = (ss in ams)
@@ -757,7 +757,7 @@ Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @tru
 
 	const Relationships* sheetRel = rid in rels;
 	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
-				filename));
+                                      filename));
 	const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
 	ArchiveMember* sheet = fn in ams;
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
