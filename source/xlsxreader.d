@@ -15,7 +15,7 @@ import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : Nullable, nullable;
 import std.utf : byChar;
-import std.variant : Algebraic;
+import mir.algebraic : Algebraic;
 import std.zip;
 
 import dxml.dom;
@@ -93,13 +93,13 @@ struct Sheet {
 		}
 	}
 
-	void printTable() const @safe {
+	void printTable() const @trusted {
 		writeln(this);			// uses toString(Sink)
 	}
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) {
+	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) @trusted {
 		auto c = this.iterateColumn!T(col, startRow, endRow);
 		return typeof(return)(c.array);
 	}
@@ -115,35 +115,35 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @safe {
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) {
+	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @trusted {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
@@ -164,35 +164,35 @@ struct Sheet {
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @safe {
+	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted /* TODO: remove @trusted when `&this` is stored in a @safe manner in `Row` */ {
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @trusted {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
