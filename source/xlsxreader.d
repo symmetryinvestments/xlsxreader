@@ -752,6 +752,7 @@ Sheet readSheet(in string filename, in string sheetName) @safe {
 string eatXlPrefix(scope return string fn) @safe pure nothrow @nogc {
     static immutable xlPrefixes = ["xl//", "/xl/"];
 	foreach (const p; xlPrefixes) {
+		// TODO: use fn.skipOver("xl//", "/xl/") when it’s nothrow @nogc
 		if (fn.startsWith(p)) {
 			return fn[p.length .. $];
 		}
