@@ -606,25 +606,6 @@ struct File {
 		return [];
     }
 
-	auto bySheet() @safe pure nothrow @nogc {
-		struct Result {
-			@property bool empty() const pure nothrow @nogc {
-				return true;
-			}
-			void popFront() pure nothrow @nogc {
-			}
-			@property ref inout(Sheet) front() inout @safe pure nothrow @nogc {
-				return _front;
-			}
-			inout(typeof(this)) save() inout pure nothrow @nogc {
-				return this;
-			}
-            ZipArchive _za;
-			Sheet _front;
-		}
-		return Result(_za);
-	}
-
 	const string filename;
 	ZipArchive _za;
 }
