@@ -596,9 +596,6 @@ struct File {
 			if (sheetsRng.empty)
 				return [];
 
-		// foreach (const i, sheet; sheetsRng.front.children)
-		// 	writeln(i, ": sheet:", sheet);
-
 		auto sheetNameIds = sheetsRng.front.children
 		                     .map!(s => SheetNameId(
 					s.attributes.filter!(a => a.name == "name").front.value
@@ -620,7 +617,8 @@ struct File {
 ////
 unittest {
 	File file = File.fromPath("multitable.xlsx");
-	foreach (sheet; file.bySheet) {
+	foreach (ref Sheet sheet; file.bySheet) {
+        // writeln(sheet);
 	}
 }
 
