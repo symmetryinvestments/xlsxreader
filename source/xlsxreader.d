@@ -40,6 +40,7 @@ struct Cell {
 	string xmlValue; ///< Value stored in cell.
 	Pos position; ///< Position of cell.
 }
+static assert(Cell.sizeof == 120);
 
 /// Cell Type.
 enum CellType {
@@ -51,6 +52,7 @@ enum CellType {
 	long_,
 	string_
 }
+static assert(CellType.sizeof == 4);
 
 /// Sheet.
 struct Sheet {
@@ -194,6 +196,7 @@ struct Sheet {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
+static assert(Sheet.sizeof == 64);
 
 struct Iterator(T) {
 	T[] data;
