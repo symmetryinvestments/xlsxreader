@@ -758,13 +758,15 @@ string eatXlPrefix(string fn) @safe {
 	return fn;
 }
 
-Sheet readSheetImpl(in string filename, in string rid, in string sheetName) @safe {
+Sheet readSheetImpl(in string filename,
+                    in string rid, in string sheetName) @safe {
 	scope(failure)
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
     return extractSheet(readFile(filename), filename, rid, sheetName);
 }
 
-private Sheet extractSheet(ZipArchive za, in string filename, in string rid, in string sheetName) @trusted {
+private Sheet extractSheet(ZipArchive za, in string filename,
+                           in string rid, in string sheetName) @trusted {
 	auto ams = za.directory;
 	immutable ss = sharedStringXMLPath;
 	string[] sharedStrings = (ss in ams)
