@@ -888,7 +888,7 @@ version(unittest)
 }
 
 private bool canConvertToDouble(string s) pure @safe nothrow @nogc {
-	if (s.startsWith('+') || s.startsWith('-')) {
+	if (s.startsWith('+', '-')) {
 		s = s[1 .. $];
 	}
 	if (s.empty) {
