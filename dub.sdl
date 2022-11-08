@@ -2,7 +2,7 @@ name "xlsxreader"
 targetType "library"
 description "A very simple xlsx reader"
 
-authors "Robert burner Schadek"
+authors "Robert burner Schadek" "Per Nordlöw"
 license "LGPL3"
 
 dflags "-vcolumns"
