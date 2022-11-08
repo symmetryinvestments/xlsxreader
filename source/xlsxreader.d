@@ -728,7 +728,7 @@ Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trust
 	auto relRng = rel.children.filter!(c => c.name == "Relationship");
 	assert(!relRng.empty);
 
-	Relationships[string] ret;
+	typeof(return) ret;
 	foreach (r; relRng) {
 		Relationships tmp;
 		tmp.id = r.attributes.filter!(a => a.name == "Id")
