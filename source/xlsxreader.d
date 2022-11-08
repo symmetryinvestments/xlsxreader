@@ -1076,7 +1076,7 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 	return cells;
 }
 
-Pos toPos(in string s) @safe {
+Pos toPos(in string s) @safe pure {
 	import std.string : indexOfAny;
 	import std.math : pow;
 	ptrdiff_t fn = s.indexOfAny("0123456789");
@@ -1090,7 +1090,7 @@ Pos toPos(in string s) @safe {
 	return Pos(row, col - 1);
 }
 
-@safe unittest {
+@safe pure unittest {
 	assert(toPos("A1").col == 0);
 	assert(toPos("Z1").col == 25);
 	assert(toPos("AA1").col == 26);
