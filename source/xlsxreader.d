@@ -578,8 +578,15 @@ private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted {
 
 /// File.
 struct File {
+	// TODO: convert to constructor this(in string filename)?
 	static typeof(this) fromPath(in string filename) @trusted {
         return typeof(return)(filename, new ZipArchive(read(filename)));
+	}
+
+	Relationships[string] relationships() @safe {
+		if (_rels is null)
+			_rels = parseRelationships(_za, _za.directory["xl/_rels/workbook.xml.rels"]);
+		return _rels;
 	}
 
     auto bySheet() @safe {
@@ -616,21 +623,21 @@ struct File {
 				)
                              );
 
-		auto rels = parseRelationships(_za, _za.directory["xl/_rels/workbook.xml.rels"]);
         return sheetNameIds.map!((const scope SheetNameId sheetNameId) {
-                return extractSheet(_za, rels, filename, sheetNameId.rid, sheetNameId.name);
+                return extractSheet(_za, relationships, filename, sheetNameId.rid, sheetNameId.name);
 			});
     }
 
 	const string filename;
-	ZipArchive _za;
+	private ZipArchive _za;
+	private Relationships[string] _rels;
 }
 
 ////
 unittest {
 	File file = File.fromPath("multitable.xlsx");
 	foreach (ref Sheet sheet; file.bySheet) {
-        // writeln(sheet);
+        writeln(sheet);
 	}
 }
 
