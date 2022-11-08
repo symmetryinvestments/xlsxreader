@@ -594,6 +594,7 @@ struct File {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
+	/// Lazy range of sheets.
     auto bySheet() @safe {
 		auto dom = getDOM();
 		version(none)			// TODO: activate
@@ -612,21 +613,27 @@ struct File {
 			if (sheetsRng.empty)
 				return [];
 
-		auto sheetNameIds = sheetsRng.front.children
-		                     .map!(s => SheetNameId(
-					s.attributes.filter!(a => a.name == "name").front.value
-						.specialCharacterReplacementReverse(),
-					s.attributes.filter!(a => a.name == "sheetId").front
-						.value.to!int(),
-					s.attributes.filter!(a => a.name == "r:id").front.value,
-				)
-                             );
+		auto sheetNameIds = sheetsRng.front.children.map!(
+			s => SheetNameId(s.attributes
+							  .filter!(a => a.name == "name")
+							  .front
+							  .value
+							  .specialCharacterReplacementReverse(),
+							 s.attributes
+							  .filter!(a => a.name == "sheetId")
+							  .front
+							  .value
+							  .to!int(),
+							 s.attributes
+							  .filter!(a => a.name == "r:id")
+							  .front.value));
 
         return sheetNameIds.map!((const scope SheetNameId sheetNameId) {
                 return extractSheet(_za, relationships, filename, sheetNameId.rid, sheetNameId.name);
 			});
     }
 
+	/// Get (and cache) DOM.
 	DOMEntity!string getDOM() @safe {
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
