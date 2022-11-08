@@ -592,7 +592,7 @@ struct File {
 		foreach (const i, sheet; sheetsRng.front.children)
 			writeln(i, ": sheet:", sheet);
 
-		auto rng = sheetsRng.front.children
+		auto sheetNameIds = sheetsRng.front.children
 		                     .map!(s => SheetNameId(
 					s.attributes.filter!(a => a.name == "name").front.value
 						.specialCharacterReplacementReverse(),
@@ -600,8 +600,8 @@ struct File {
 						.value.to!int(),
 					s.attributes.filter!(a => a.name == "r:id").front.value,
 				)
-		);
-
+                             );
+        // return sheetNamesIds.map!(_ => _);
 
 		return [];
     }
