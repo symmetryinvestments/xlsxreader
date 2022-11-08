@@ -562,35 +562,42 @@ private ZipArchive readFile(in string filename) @trusted {
 private static immutable workbookXMLPath = "xl/workbook.xml";
 private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 
+private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted {
+	return za.expand(de);
+}
+
 /// File.
 struct File {
 	static typeof(this) fromPath(in string filename) @trusted {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
-    Sheet[] sheets() {
+    auto bySheet() @safe {
 		auto ent = workbookXMLPath in _za.directory;
-		if (ent is null)
-			return [];
+		version(none)
+			if (ent is null)
+				return [];
 
-		auto dom = _za.expand(*ent).convertToString().parseDOM();
-		if (dom.children.length != 1)
-			return [];
+		auto dom = _za.expandTrusted(*ent).convertToString().parseDOM();
+		version(none)
+			if (dom.children.length != 1)
+				return [];
 
 		auto workbook = dom.children[0];
-		writeln("workbook:", workbook);
 
-		if (workbook.name != "workbook" &&
-			workbook.name != "s:workbook")
-			return [];
+		version(none)
+			if (workbook.name != "workbook" &&
+				workbook.name != "s:workbook")
+				return [];
 
 		const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
 		auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
-		if (sheetsRng.empty)
-			return [];
+		version(none)
+			if (sheetsRng.empty)
+				return [];
 
-		foreach (const i, sheet; sheetsRng.front.children)
-			writeln(i, ": sheet:", sheet);
+		// foreach (const i, sheet; sheetsRng.front.children)
+		// 	writeln(i, ": sheet:", sheet);
 
 		auto sheetNameIds = sheetsRng.front.children
 		                     .map!(s => SheetNameId(
@@ -601,9 +608,9 @@ struct File {
 					s.attributes.filter!(a => a.name == "r:id").front.value,
 				)
                              );
-        // TODO: return sheetNamesIds.map!(_ => _);
-
-		return [];
+        return sheetNameIds.map!((const scope SheetNameId sheetNameId) {
+                return readSheetImplFromArchive(_za, filename, sheetNameId.rid, sheetNameId.name);
+			});
     }
 
 	const string filename;
@@ -613,7 +620,8 @@ struct File {
 ////
 unittest {
 	File file = File.fromPath("multitable.xlsx");
-	auto sheets = file.sheets();
+	foreach (sheet; file.bySheet) {
+	}
 }
 
 /// Sheet name, id and rid.
@@ -752,7 +760,7 @@ private Sheet readSheetImplFromArchive(ZipArchive za, in string filename, in str
 		: [];
 	//logf("%s", sharedStrings);
 
-	const Relationships[string] rels = parseRelationships(za,
+	const Relationships[string] rels = parseRelationships(za, // TODO: factor out
 			ams["xl/_rels/workbook.xml.rels"]);
 
 	const Relationships* sheetRel = rid in rels;
