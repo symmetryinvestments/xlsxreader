@@ -18,13 +18,24 @@ import std.zip;
 
 import dxml.dom;
 
-/// Cell Position. TODO: use uint if that’s what other libraries use
+/** Cell position row 0-based offset. */
+alias RowOffset = uint;
+
+/** Cell position column 0-based offset. */
+alias ColOffset = uint;
+
+/** Cell Position.
+
+	Excel has a limit of 1,048,576 rows and 16,384 columns per sheet so use
+	32-bit precision now.
+
+	See: https://support.socrata.com/hc/en-us/articles/115005306167-Limitations-of-Excel-and-CSV-Downloads
+ */
 struct Pos {
-	// zero based
-	size_t row;
-	// zero based
-	size_t col;
+	RowOffset row;
+	ColOffset col;
 }
+static assert(Pos.sizeof == 8);
 
 /// Cell Data.
 alias Data = Algebraic!(bool, long, double, string, DateTime, Date, TimeOfDay);
@@ -40,7 +51,7 @@ struct Cell {
 	string xmlValue; ///< Value stored in cell.
 	Pos position; ///< Position of cell.
 }
-static assert(Cell.sizeof == 120);
+static assert(Cell.sizeof == 112);
 
 /// Cell Type.
 enum CellType {
@@ -196,7 +207,7 @@ struct Sheet {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
-static assert(Sheet.sizeof == 64);
+static assert(Sheet.sizeof == 56);
 
 struct Iterator(T) {
 	T[] data;
@@ -1071,8 +1082,8 @@ Pos toPos(in string s) @safe pure {
 	import std.math : pow;
 	ptrdiff_t fn = s.indexOfAny("0123456789");
 	enforce(fn != -1, s);
-	size_t row = to!size_t(to!long(s[fn .. $]) - 1);
-	size_t col = 0;
+	RowOffset row = to!RowOffset(to!int(s[fn .. $]) - 1);
+	ColOffset col = 0;
 	string colS = s[0 .. fn];
 	foreach (const idx, char c; colS) {
 		col = col * 26 + (c - 'A' + 1);
