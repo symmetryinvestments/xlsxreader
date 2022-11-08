@@ -877,12 +877,14 @@ private bool canConvertToLong(in string s) @safe pure nothrow @nogc {
 	return s.byChar.all!isDigit();
 }
 
-private immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
-private auto rgx = ctRegex!rs;
-
-private bool canConvertToDoubleOld(in string s) @safe {
-	auto cap = matchAll(s, rgx);
-	return cap.empty || cap.front.hit != s ? false : true;
+version(unittest)
+{
+	private static immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
+	private static immutable rgx = ctRegex!rs;
+	private bool canConvertToDoubleOld(in string s) @safe {
+		auto cap = matchAll(s, rgx);
+		return cap.empty || cap.front.hit != s ? false : true;
+	}
 }
 
 private bool canConvertToDouble(string s) pure @safe @nogc {
