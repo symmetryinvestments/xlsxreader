@@ -872,9 +872,8 @@ string extractData(DOMEntity!string si) {
 private bool canConvertToLong(in string s) @safe {
 	import std.utf : byChar;
 	import std.ascii : isDigit;
-	if (s.empty) {
+	if (s.empty)
 		return false;
-	}
 	return s.byChar.all!isDigit();
 }
 
