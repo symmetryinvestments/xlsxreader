@@ -571,6 +571,7 @@ private ZipArchive readFile(in string filename) @trusted {
 
 private static immutable workbookXMLPath = "xl/workbook.xml";
 private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
+private static immutable relsXMLPath = "xl/_rels/workbook.xml.rels";
 
 private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted {
 	return za.expand(de);
@@ -624,7 +625,7 @@ struct File {
 
 	private Relationships[string] relationships() @safe {
 		if (_rels is null)
-			_rels = parseRelationships(_za, _za.directory["xl/_rels/workbook.xml.rels"]);
+			_rels = parseRelationships(_za, _za.directory[relsXMLPath]);
 		return _rels;
 	}
 
@@ -767,7 +768,7 @@ Sheet readSheetImpl(in string filename,
 	scope(failure)
 		writefln("Failed at file '%s' and sheet '%s'", filename, rid);
 	auto za = readFile(filename);
-	auto rels = parseRelationships(za, za.directory["xl/_rels/workbook.xml.rels"]);
+	auto rels = parseRelationships(za, za.directory[relsXMLPath]);
     return extractSheet(za, rels, filename, rid, sheetName);
 }
 
