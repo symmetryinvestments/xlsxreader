@@ -89,8 +89,8 @@ struct Sheet {
 	void toString(Sink)(ref scope Sink sink) const scope {
 		import std.format : formattedWrite;
 		long[] maxCol = new long[](maxPos.col + 1);
-		foreach (const row; this.table) {
-			foreach (const idx, const Cell col; row) {
+		foreach (const ref row; this.table) {
+			foreach (const idx, const ref Cell col; row) {
 				const string s = col.xmlValue;
 
 				maxCol[idx] = maxCol[idx] < s.length ? s.length : maxCol[idx];
@@ -98,8 +98,8 @@ struct Sheet {
 		}
 		maxCol[] += 1;
 
-		foreach (const row; this.table) {
-			foreach (const idx, const Cell col; row)
+		foreach (const ref row; this.table) {
+			foreach (const idx, const ref Cell col; row)
 				sink.formattedWrite("%*s, ", maxCol[idx], col.xmlValue);
 			sink.formattedWrite("\n");
 		}
@@ -170,8 +170,7 @@ struct Sheet {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
-	static foreach (T; ["long", "double", "string", "Date", "TimeOfDay",
-			"DateTime"])
+	static foreach (T; ["long", "double", "string", "Date", "TimeOfDay", "DateTime"])
 	{
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
@@ -651,12 +650,12 @@ version(benchmark)
 	import std.meta : AliasSeq;
     static void bySheet_multitable() @trusted {
         File file = File.fromPath("multitable.xlsx");
-        foreach (ref Sheet sheet; file.bySheet) {
+        foreach (ref sheet; file.bySheet) {
         }
     }
     static void bySheet_five_large_sheets() @trusted {
         File file = File.fromPath("five_large_sheets.xlsx");
-        foreach (ref Sheet sheet; file.bySheet) {
+        foreach (ref sheet; file.bySheet) {
         }
     }
 	alias funs = AliasSeq!(bySheet_multitable,
@@ -819,7 +818,7 @@ private Sheet extractSheet(ZipArchive za,
 	}
 
 	auto table = new Cell[][](maxPos.row + 1, maxPos.col + 1);
-	foreach (const c; cells) {
+	foreach (const ref c; cells) {
 		table[c.position.row][c.position.col] = c;
 	}
 
@@ -841,20 +840,20 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 		return ret;
 	}
 	auto siRng = sst.children.filter!(c => c.name == "si");
-	foreach (si; siRng) {
+	foreach (ref si; siRng) {
 		if (si.type != EntityType.elementStart) {
 			continue;
 		}
 		//ret ~= extractData(si);
 		string tmp;
-		foreach (tORr; si.children) {
+		foreach (ref tORr; si.children) {
 			if (tORr.name == "t" && tORr.type == EntityType.elementStart
 					&& !tORr.children.empty)
 			{
 				//ret ~= Data(convert(tORr.children[0].text));
 				ret ~= tORr.children[0].text.removeSpecialCharacter();
 			} else if (tORr.name == "r") {
-				foreach (r; tORr.children.filter!(r => r.name == "t")) {
+				foreach (ref r; tORr.children.filter!(r => r.name == "t")) {
 					if (r.type == EntityType.elementStart && !r.children.empty) {
 						tmp ~= r.children[0].text.removeSpecialCharacter();
 					}
@@ -874,7 +873,7 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 
 string extractData(DOMEntity!string si) {
 	string tmp;
-	foreach (tORr; si.children) {
+	foreach (ref tORr; si.children) {
 		if (tORr.name == "t") {
 			if (!tORr.attributes.filter!(a => a.name == "xml:space").empty) {
 				return "";
@@ -886,7 +885,7 @@ string extractData(DOMEntity!string si) {
 				return "";
 			}
 		} else if (tORr.name == "r") {
-			foreach (r; tORr.children.filter!(r => r.name == "t")) {
+			foreach (ref r; tORr.children.filter!(r => r.name == "t")) {
 				tmp ~= r.children[0].text;
 			}
 		}
@@ -995,7 +994,7 @@ string removeSpecialCharacter(string s) {
 		import std.algorithm.searching : canFind;
 		// TODO: use substitute.array
 		import std.array : replace;
-		foreach (const tr; toRe) {
+		foreach (const ref tr; toRe) {
 			while (canFind(s, tr.from)) {
 				s = s.replace(tr.from, tr.to);
 			}
@@ -1234,9 +1233,9 @@ unittest {
 	{
 		//writeln(de.name);
 		auto sn = sheetNames(de.name);
-		foreach (const s; sn) {
+		foreach (const ref s; sn) {
 			auto sheet = readSheet(de.name, s.name);
-			foreach (const cell; sheet.cells) {
+			foreach (const ref cell; sheet.cells) {
 			}
 		}
 	}
