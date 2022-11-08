@@ -577,6 +577,13 @@ private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted {
 	return za.expand(de);
 }
 
+struct Relationships {
+	string id;
+	string file;
+}
+
+alias RelationshipsById = Relationships[string];
+
 /// File.
 struct File {
 	// TODO: convert to constructor this(in string filename)?
@@ -623,7 +630,7 @@ struct File {
 			});
     }
 
-	private Relationships[string] relationships() @safe {
+	private RelationshipsById relationships() @safe {
 		if (_rels is null)
 			_rels = parseRelationships(_za, _za.directory[relsXMLPath]);
 		return _rels;
@@ -631,7 +638,7 @@ struct File {
 
 	const string filename;
 	private ZipArchive _za;
-	private Relationships[string] _rels;
+	private RelationshipsById _rels;
 }
 
 ////
@@ -718,12 +725,7 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 	assert(r[0].id == 1);
 }
 
-struct Relationships {
-	string id;
-	string file;
-}
-
-Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
+RelationshipsById parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
 	auto dom = za.expandTrusted(am).convertToString.parseDOM;
 	assert(dom.children.length == 1);
 	auto rel = dom.children[0];
@@ -773,7 +775,7 @@ Sheet readSheetImpl(in string filename,
 }
 
 private Sheet extractSheet(ZipArchive za,
-						   in Relationships[string] rels,
+						   in RelationshipsById rels,
 						   in string filename,
                            in string rid, in string sheetName) @trusted {
 	string[] ss;
