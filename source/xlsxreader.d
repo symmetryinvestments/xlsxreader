@@ -663,11 +663,10 @@ string convertToString(in ubyte[] d) @trusted {
 /// Read sheet names stored in `filename`.
 SheetNameId[] sheetNames(in string filename) @trusted {
 	auto za = readFile(filename);
-	auto ams = za.directory;
-	if (workbookXMLPath !in ams) {
+	if (workbookXMLPath !in za.directory) {
 		return SheetNameId[].init;
 	}
-	ubyte[] wb = za.expand(ams[workbookXMLPath]);
+	ubyte[] wb = za.expand(za.directory[workbookXMLPath]);
 	string wbData = convertToString(wb);
 
 	auto dom = parseDOM(wbData);
@@ -769,9 +768,8 @@ private Sheet extractSheet(ZipArchive za,
 						   in Relationships[string] rels,
 						   in string filename,
                            in string rid, in string sheetName) @trusted {
-	auto ams = za.directory;
 	string[] ss;
-	if (ArchiveMember* amPtr = sharedStringXMLPath in ams)
+	if (ArchiveMember* amPtr = sharedStringXMLPath in za.directory)
 		ss = readSharedEntries(za, *amPtr);
 	//logf("%s", ss);
 
@@ -779,9 +777,9 @@ private Sheet extractSheet(ZipArchive za,
 	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
                                       filename));
 	const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
-	ArchiveMember* sheet = fn in ams;
+	ArchiveMember* sheet = fn in za.directory;
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
-				sheetRel.file, fn, ams.keys()));
+				sheetRel.file, fn, za.directory.keys()));
 
 	auto cells = insertValueIntoCell(readCells(za, *sheet), ss);
 
