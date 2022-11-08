@@ -27,7 +27,7 @@ struct Pos {
 }
 
 /// Cell Data.
-alias Data = Algebraic!(bool,long,double,string,DateTime,Date,TimeOfDay);
+alias Data = Algebraic!(bool, long, double, string, DateTime, Date, TimeOfDay);
 
 /// Sheet Cell.
 struct Cell {
