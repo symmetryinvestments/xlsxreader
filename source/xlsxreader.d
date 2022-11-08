@@ -5,7 +5,9 @@ import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, popFront;
 import std.conv : to;
+import core.time : Duration;
 import std.datetime : DateTime, Date, TimeOfDay;
+import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.exception : enforce;
 import std.file : read, exists, readText;
 import std.format : format;
@@ -17,6 +19,8 @@ import mir.algebraic : Algebraic;
 import std.zip;
 
 import dxml.dom;
+
+version = benchmark;
 
 /** Cell position row 0-based offset. */
 alias RowOffset = uint;
@@ -642,11 +646,26 @@ struct File {
 }
 
 ////
-unittest {
-	File file = File.fromPath("multitable.xlsx");
-	foreach (ref Sheet sheet; file.bySheet) {
-        writeln(sheet);
+version(benchmark)
+@safe unittest {
+	import std.meta : AliasSeq;
+    static void iterateSheets_multitable() @trusted {
+        File file = File.fromPath("multitable.xlsx");
+        foreach (ref Sheet sheet; file.bySheet) {
+        }
+    }
+    static void iterateSheets_five_large_sheets() @trusted {
+        File file = File.fromPath("five_large_sheets.xlsx");
+        foreach (ref Sheet sheet; file.bySheet) {
+        }
+    }
+	alias funs = AliasSeq!(iterateSheets_multitable,
+						   iterateSheets_five_large_sheets);
+	auto results = benchmarkMin!(funs)(3);
+	foreach (const i, fun; funs) {
+		writeln(fun.stringof, " took ", results[i]);
 	}
+
 }
 
 /// Sheet name, id and rid.
@@ -1276,4 +1295,24 @@ unittest {
 		];
 	assert(equal(rslt, target), format("\ngot: %s\nexp: %s\ntable %s", rslt
 				, target, s.toString()));
+}
+
+/** Variant of Phobos `benchmark` that, instead of sum all run times, returns
+	minimum of all run times as that is a more stable metric.
+ */
+private Duration[funs.length] benchmarkMin(funs...)(uint n) if (funs.length >= 1) {
+    import std.algorithm.comparison : min;
+    Duration[funs.length] result;
+    auto sw = StopWatch(AutoStart.yes);
+    foreach (const i, fun; funs) {
+        result[i] = Duration.max;
+		foreach (const j; 0 .. n) {
+            sw.reset();
+			sw.start();
+            fun();
+            sw.stop();
+            result[i] = min(result[i], sw.peek());
+        }
+    }
+    return result;
 }
