@@ -1096,7 +1096,7 @@ Pos toPos(in string s) @safe pure {
 	assert(toPos("AA1").col == 26);
 }
 
-Pos elementMax(Pos a, Pos b) {
+Pos elementMax(Pos a, Pos b) @safe pure nothrow @nogc {
 	return Pos(a.row < b.row ? b.row : a.row,
 			a.col < b.col ? b.col : a.col);
 }
