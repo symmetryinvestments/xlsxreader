@@ -869,7 +869,7 @@ string extractData(DOMEntity!string si) {
 	assert(false);
 }
 
-private bool canConvertToLong(in string s) @safe {
+private bool canConvertToLong(in string s) @safe pure nothrow @nogc {
 	import std.utf : byChar;
 	import std.ascii : isDigit;
 	if (s.empty)
