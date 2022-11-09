@@ -1,3 +1,6 @@
+/* TODO: Qualify `std.zip.ZipArchive` members as, at least, `pure` and then the
+   functions in there that use them.
+*/
 module xlsxreader;
 
 import std.algorithm.iteration : filter, map;
@@ -581,7 +584,7 @@ private static immutable workbookXMLPath = "xl/workbook.xml";
 private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 private static immutable relsXMLPath = "xl/_rels/workbook.xml.rels";
 
-private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted {
+private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted /* TODO: pure */ {
 	return za.expand(de);
 }
 
@@ -599,8 +602,7 @@ struct File {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
-	/// Lazy range of sheets.
-    auto bySheet() @safe {
+    SheetNameId[] sheetNameIds() @safe /* TODO: pure */ {
 		auto dom = getDOM();
 		version(none)			// TODO: activate
 			if (dom.children.length != 1)
@@ -618,7 +620,7 @@ struct File {
 			if (sheetsRng.empty)
 				return [];
 
-		auto sheetNameIds = sheetsRng.front.children.map!(
+		return sheetsRng.front.children.map!(
 			s => SheetNameId(s.attributes
 							  .filter!(a => a.name == "name")
 							  .front
@@ -631,15 +633,18 @@ struct File {
 							  .to!int(),
 							 s.attributes
 							  .filter!(a => a.name == "r:id")
-							  .front.value));
+							  .front.value)).array;
+    }
 
+	/// Lazy range of sheets.
+    auto bySheet() @safe {
         return sheetNameIds.map!((const scope SheetNameId sheetNameId) {
                 return extractSheet(_za, relationships, filename, sheetNameId.rid, sheetNameId.name);
 			});
     }
 
 	/// Get (and cache) DOM.
-	DOMEntity!string getDOM() @safe {
+	DOMEntity!string getDOM() @safe /* TODO: pure */ {
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
 		if (ent is null)
