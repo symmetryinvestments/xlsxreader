@@ -602,7 +602,7 @@ struct File {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
-    SheetNameId[] sheetNameIds() @safe /* TODO: pure */ {
+    private SheetNameId[] sheetNameIds() @safe /* TODO: pure */ {
 		auto dom = getDOM();
 		version(none)			// TODO: activate
 			if (dom.children.length != 1)
@@ -644,7 +644,7 @@ struct File {
     }
 
 	/// Get (and cache) DOM.
-	DOMEntity!string getDOM() @safe /* TODO: pure */ {
+	private DOMEntity!string getDOM() @safe /* TODO: pure */ {
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
 		if (ent is null)
