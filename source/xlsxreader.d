@@ -3,12 +3,12 @@
 */
 module xlsxreader;
 
+import core.time : Duration;
 import std.algorithm.iteration : filter, map;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
 import std.array : array, empty, front, popFront;
 import std.conv : to;
-import core.time : Duration;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.exception : enforce;
@@ -18,10 +18,9 @@ import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : Nullable, nullable;
-import mir.algebraic : Algebraic;
 import std.zip;
-
-import dxml.dom;
+import mir.algebraic : Algebraic;
+import dxml.dom : DOMEntity, EntityType, parseDOM;
 
 // disabled for now for faster builds
 // version = ctRegex_test;
