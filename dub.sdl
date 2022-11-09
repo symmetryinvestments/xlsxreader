@@ -29,7 +29,7 @@ buildType "unittest-profile" {
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
 
-buildType "unittest-profileGC" {
+buildType "unittest-profileGC" { # currently DMD only
 	buildOptions "unittests" "debugInfo" "profileGC"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
@@ -39,7 +39,7 @@ buildType "unittest-release-profile" {
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
 
-buildType "unittest-release-profileGC" {
+buildType "unittest-release-profileGC" { # currently DMD only
 	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profileGC"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
