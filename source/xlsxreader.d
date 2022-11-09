@@ -678,31 +678,27 @@ version(xlsxreader_benchmark)
 }
 
 version(xlsxreader_benchmark)
-/// benchmark reading of "big5.xlsx"
+/// benchmark reading of "50xP_sheet1.xlsx"
 @safe unittest {
+	enum path = "50xP_sheet1.xlsx";
 	import std.meta : AliasSeq;
-	static void use_sheetNamesAndreadSheet_big5() @trusted {
-		const path = "big5.xlsx";
-		size_t i = 0;
-		foreach (const ref s; sheetNames(path)) {
+	static void use_sheetNamesAndreadSheet() @trusted {
+		foreach (const i, const ref s; sheetNames(path)) {
 			auto sheet = readSheet(path, s.name);
-			// writeln(__FUNCTION__, ": sheet nr i:", i);
-			i++;
 		}
 	}
-    static void use_bySheet_big5() @trusted {
-        File file = File.fromPath("big5.xlsx");
+    static void use_bySheet() @trusted {
+        File file = File.fromPath(path);
 		size_t i = 0;
         foreach (ref sheet; file.bySheet) {
-			// writeln(__FUNCTION__, ": sheet nr i:", i);
 			i++;
         }
     }
-	alias funs = AliasSeq!(use_sheetNamesAndreadSheet_big5,
-						   use_bySheet_big5);
+	alias funs = AliasSeq!(use_sheetNamesAndreadSheet,
+						   use_bySheet);
 	auto results = benchmarkMin!(funs)(runCount);
 	foreach (const i, fun; funs) {
-		writeln(fun.stringof, " took ", results[i]);
+		writeln(fun.stringof[0 .. $-2], "(\"", path, "\") took ", results[i]);
 	}
 
 }
