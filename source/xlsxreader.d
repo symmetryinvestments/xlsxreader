@@ -644,12 +644,14 @@ struct File {
 
 	/// Get (and cache) DOM.
 	private DOMEntity!string getDOM() @safe /* TODO: pure */ {
+		import dxml.parser : Config, SkipComments, SkipPI, SplitEmpty;
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
 		if (ent is null)
 			return typeof(return).init;
-		if (_dom == _dom.init)
-			_dom = _za.expandTrusted(*ent).convertToString().parseDOM();
+		if (_dom == _dom.init) {
+			_dom = _za.expandTrusted(*ent).convertToString().parseDOM!(Config(SkipComments.no, SkipPI.no, SplitEmpty.no))();
+		}
 		return _dom;
 	}
 
