@@ -26,7 +26,7 @@ import dxml.dom : DOMEntity, EntityType, parseDOM;
 // version = ctRegex_test;
 
 version(xlsxreader_benchmark)
-	enum runCount = 3;
+	enum runCount = 10;
 
 /** Cell position row 0-based offset. */
 alias RowOffset = uint;
@@ -643,14 +643,16 @@ struct File {
     }
 
 	/// Get (and cache) DOM.
-	private DOMEntity!string getDOM() @safe /* TODO: pure */ {
+	private DOMEntity!(string) getDOM() @safe /* TODO: pure */ {
 		import dxml.parser : Config, SkipComments, SkipPI, SplitEmpty;
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
 		if (ent is null)
 			return typeof(return).init;
 		if (_dom == _dom.init) {
-			_dom = _za.expandTrusted(*ent).convertToString().parseDOM!(Config(SkipComments.no, SkipPI.no, SplitEmpty.no))();
+			delegate() @trusted {
+				_dom = _za.expandTrusted(*ent).convertToString().parseDOM!(Config(SkipComments.no, SkipPI.no, SplitEmpty.no))();
+			}();
 		}
 		return _dom;
 	}
