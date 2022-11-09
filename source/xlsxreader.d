@@ -636,7 +636,7 @@ struct File {
 							  .front.value)).array;
     }
 
-	/// Lazy range of sheets.
+	/// Returns: lazy range over sheets.
     auto bySheet() @safe {
         return sheetNameIds.map!((const scope SheetNameId sheetNameId) {
                 return extractSheet(_za, relationships, filename, sheetNameId.rid, sheetNameId.name);
