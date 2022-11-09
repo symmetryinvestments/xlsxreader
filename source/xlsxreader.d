@@ -23,6 +23,9 @@ import std.zip;
 
 import dxml.dom;
 
+// disabled for now for faster builds
+// version = ctRegex_test;
+
 version(xlsxreader_benchmark)
 	enum runCount = 3;
 
@@ -916,7 +919,7 @@ private bool canConvertToLong(in string s) @safe pure nothrow @nogc {
 	return s.byChar.all!isDigit();
 }
 
-version(xlsxreader_test)
+version(ctRegex_test)
 version(unittest)
 {
 	private static immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
@@ -982,8 +985,13 @@ version(xlsxreader_test)
 		, Test("-1100.0", true)
 		];
 	foreach (const t; tests) {
-		assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt) &&
-               canConvertToDouble(t.tt) == t.rslt,
+        version(ctRegex_test)
+            assert(canConvertToDouble(t.tt) == canConvertToDoubleOld(t.tt) ,
+                   format("%s %s %s %s", t.tt,
+                          canConvertToDouble(t.tt),
+                          canConvertToDoubleOld(t.tt),
+                          t.rslt));
+		assert(canConvertToDouble(t.tt) == t.rslt,
                format("%s %s %s %s", t.tt,
                       canConvertToDouble(t.tt),
                       canConvertToDoubleOld(t.tt),
