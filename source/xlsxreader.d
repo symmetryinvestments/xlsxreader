@@ -643,7 +643,6 @@ struct File {
     }
 
 	/// Get (and cache) DOM.
-	pragma(msg, __FILE__, "(", __LINE__, ",1): Debug: ", typeof(DOMEntity!string.tupleof));
 	private DOMEntity!string getDOM() @safe /* TODO: pure */ {
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
