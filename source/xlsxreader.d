@@ -716,7 +716,7 @@ struct SheetNameId {
 }
 
 string convertToString(in ubyte[] d) @trusted {
-	import std.encoding;
+	import std.encoding : getBOM, BOM, transcode;
 	const b = getBOM(d);
 	switch(b.schema) {
 	case BOM.none:
@@ -993,9 +993,8 @@ version(xlsxreader_test)
                           canConvertToDoubleOld(t.tt),
                           t.rslt));
 		assert(canConvertToDouble(t.tt) == t.rslt,
-               format("%s %s %s %s", t.tt,
+               format("%s %s %s", t.tt,
                       canConvertToDouble(t.tt),
-                      canConvertToDoubleOld(t.tt),
                       t.rslt));
 	}
 }
