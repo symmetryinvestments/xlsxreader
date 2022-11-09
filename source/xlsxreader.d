@@ -735,19 +735,20 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 	if (workbookXMLPath !in za.directory) {
 		return SheetNameId[].init;
 	}
-	ubyte[] wb = za.expand(za.directory[workbookXMLPath]);
-	string wbData = convertToString(wb);
 
-	auto dom = parseDOM(wbData);
+	auto dom = za.expand(za.directory[workbookXMLPath])
+                 .convertToString()
+                 .parseDOM();
 	if (dom.children.length != 1) {
 		return [];
 	}
+
 	auto workbook = dom.children[0];
-	const string sheetName = workbook.name == "workbook"
-		? "sheets" : "s:sheets";
+	const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
 	if (workbook.name != "workbook" && workbook.name != "s:workbook") {
 		return [];
 	}
+
 	auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
 	if (sheetsRng.empty) {
 		return [];
