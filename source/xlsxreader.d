@@ -604,21 +604,18 @@ struct File {
 
     private SheetNameId[] sheetNameIds() @safe /* TODO: pure */ {
 		auto dom = getDOM();
-		version(none)			// TODO: activate
-			if (dom.children.length != 1)
-				return [];
+        if (dom.children.length != 1)
+            return [];
 
 		auto workbook = dom.children[0];
-		version(none)			// TODO: activate
-			if (workbook.name != "workbook" &&
-				workbook.name != "s:workbook")
-				return [];
+        if (workbook.name != "workbook" &&
+            workbook.name != "s:workbook")
+            return [];
 
 		const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
 		auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
-		version(none)			// TODO: activate
-			if (sheetsRng.empty)
-				return [];
+        if (sheetsRng.empty)
+            return [];
 
 		return sheetsRng.front.children.map!(
 			s => SheetNameId(s.attributes
