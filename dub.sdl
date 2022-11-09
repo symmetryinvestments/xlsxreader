@@ -14,6 +14,7 @@ dependency "mir-core" version="*"
 
 buildType "unittest" {
 	buildOptions "unittests" "debugMode" "debugInfo"
+	versions "xlsxreader_test"
 	dflags "-allinst" "-checkaction=context"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 	dflags "-fsanitize=address" platform="posix-ldc"
@@ -21,25 +22,34 @@ buildType "unittest" {
 
 buildType "unittest-release" {
 	buildOptions "unittests" "releaseMode" "optimize" "inline"
+	versions "xlsxreader_test"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
 
-buildType "unittest-profile" {
+buildType "benchmark-profile" {
 	buildOptions "unittests" "debugInfo" "profile"
+	versions "xlsxreader_benchmark"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+	preRunCommands "rm trace.def trace.log"
 }
 
-buildType "unittest-profileGC" { # currently DMD only
+buildType "benchmark-profileGC" { # currently DMD only
 	buildOptions "unittests" "debugInfo" "profileGC"
+	versions "xlsxreader_benchmark"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+	preRunCommands "rm trace.def trace.log"
 }
 
-buildType "unittest-release-profile" {
+buildType "benchmark-release-profile" {
 	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profile"
+	versions "xlsxreader_benchmark"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+	preRunCommands "rm trace.def trace.log"
 }
 
-buildType "unittest-release-profileGC" { # currently DMD only
+buildType "benchmark-release-profileGC" { # currently DMD only
 	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profileGC"
+	versions "xlsxreader_benchmark"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+	preRunCommands "rm trace.def trace.log"
 }

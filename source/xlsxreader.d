@@ -20,7 +20,8 @@ import std.zip;
 
 import dxml.dom;
 
-version = benchmark;
+version(xlsxreader_benchmark)
+	enum runCount = 3;
 
 /** Cell position row 0-based offset. */
 alias RowOffset = uint;
@@ -366,6 +367,7 @@ struct Column(T) {
 	}
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.range : isForwardRange;
 	import std.meta : AliasSeq;
@@ -435,6 +437,7 @@ long dateToLong(Date d) @safe {
 	return nSerialDate;
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
 	foreach (const d; ds) {
@@ -461,6 +464,7 @@ double timeOfDayToDouble(TimeOfDay tod) @safe {
 	return (h + m + s) / (24.0 * 60.0 * 60.0);
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
@@ -486,6 +490,7 @@ DateTime doubleToDateTime(double d) @safe {
 	return DateTime(dt, t);
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
@@ -656,8 +661,8 @@ struct File {
 	private RelationshipsById _rels;
 }
 
-////
-version(benchmark)
+version(xlsxreader_benchmark)
+/// benchmark reading of "multitable.xlsx"
 @safe unittest {
 	import std.meta : AliasSeq;
     static void use_bySheet_multitable() @trusted {
@@ -665,14 +670,17 @@ version(benchmark)
         foreach (ref sheet; file.bySheet) {
         }
     }
-    static void use_bySheet_big5() @trusted {
-        File file = File.fromPath("big5.xlsx");
-		size_t i = 0;
-        foreach (ref sheet; file.bySheet) {
-			// writeln(__FUNCTION__, ": sheet nr i:", i);
-			i++;
-        }
-    }
+	alias funs = AliasSeq!(use_bySheet_multitable);
+	auto results = benchmarkMin!(funs)(runCount);
+	foreach (const i, fun; funs) {
+		writeln(fun.stringof, " took ", results[i]);
+	}
+}
+
+version(xlsxreader_benchmark)
+/// benchmark reading of "big5.xlsx"
+@safe unittest {
+	import std.meta : AliasSeq;
 	static void use_sheetNamesAndreadSheet_big5() @trusted {
 		const path = "big5.xlsx";
 		size_t i = 0;
@@ -682,10 +690,17 @@ version(benchmark)
 			i++;
 		}
 	}
-	alias funs = AliasSeq!(use_bySheet_multitable,
-						   use_sheetNamesAndreadSheet_big5,
+    static void use_bySheet_big5() @trusted {
+        File file = File.fromPath("big5.xlsx");
+		size_t i = 0;
+        foreach (ref sheet; file.bySheet) {
+			// writeln(__FUNCTION__, ": sheet nr i:", i);
+			i++;
+        }
+    }
+	alias funs = AliasSeq!(use_sheetNamesAndreadSheet_big5,
 						   use_bySheet_big5);
-	auto results = benchmarkMin!(funs)(3);
+	auto results = benchmarkMin!(funs)(runCount);
 	foreach (const i, fun; funs) {
 		writeln(fun.stringof, " took ", results[i]);
 	}
@@ -756,12 +771,14 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 		.release;
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	auto r = sheetNames("multitable.xlsx");
 	assert(r[0].name == "wb1");
 	assert(r[0].id == 1);
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	auto r = sheetNames("sheetnames.xlsx");
 	assert(r[0].name == "A & B ;", r[0].name);
@@ -934,6 +951,7 @@ private bool canConvertToLong(in string s) @safe pure nothrow @nogc {
 	return s.byChar.all!isDigit();
 }
 
+version(xlsxreader_test)
 version(unittest)
 {
 	private static immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
@@ -983,6 +1001,7 @@ private bool canConvertToDouble(string s) pure @safe nothrow @nogc {
 	return s.empty;
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	static struct Test {
 		string tt;
@@ -1148,6 +1167,7 @@ Pos toPos(in string s) @safe pure {
 	return Pos(row, col - 1);
 }
 
+version(xlsxreader_test)
 @safe pure unittest {
 	assert(toPos("A1").col == 0);
 	assert(toPos("Z1").col == 25);
@@ -1172,6 +1192,7 @@ string specialCharacterReplacement(string s) @safe pure nothrow {
 			.replace("&", "&amp;");
 }
 
+version(xlsxreader_test)
 @safe pure nothrow unittest {
 	assert("&".specialCharacterReplacement == "&amp;");
 }
@@ -1186,6 +1207,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 			.replace("&amp;", "&");
 }
 
+version(xlsxreader_test)
 @safe pure nothrow unittest {
 	assert("&quot;".specialCharacterReplacementReverse == "\"");
 	assert("&apos;".specialCharacterReplacementReverse == "'");
@@ -1194,6 +1216,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 	assert("&amp;".specialCharacterReplacementReverse == "&");
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.math : isClose;
 	auto r = readSheet("multitable.xlsx", "wb1");
@@ -1206,6 +1229,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 		);
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
@@ -1225,6 +1249,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 		.array;
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb2");
@@ -1247,6 +1272,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 	assert(equal(rslt, it2));
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
@@ -1256,6 +1282,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 	//assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
+version(xlsxreader_test)
 unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
@@ -1272,6 +1299,7 @@ unittest {
 	}
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.algorithm.comparison : equal;
 	auto sheet = readSheet("testworkbook.xlsx", "ws1");
@@ -1294,6 +1322,7 @@ unittest {
 	assert(equal(c2, r2), format("%s", c2));
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.math : isClose;
 	auto sheet = readSheet("toto.xlsx", "Trades");
@@ -1305,6 +1334,7 @@ unittest {
 	assert(isClose(d, 38204642.510000));
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	const sheet = readSheet("leading_zeros.xlsx", "Sheet1");
 	auto a2 = sheet.cells.filter!(c => c.r == "A2");
@@ -1312,6 +1342,7 @@ unittest {
 	assert(a2.front.xmlValue == "0012", format("%s", a2.front));
 }
 
+version(xlsxreader_test)
 @safe unittest {
 	import std.algorithm.comparison : equal;
 	auto s = readSheet("datetimes.xlsx", "Sheet1");
