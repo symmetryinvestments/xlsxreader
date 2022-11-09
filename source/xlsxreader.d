@@ -736,41 +736,7 @@ string convertToString(in ubyte[] d) @trusted {
 
 /// Read sheet names stored in `filename`.
 SheetNameId[] sheetNames(in string filename) @trusted {
-	auto za = readFile(filename);
-	if (workbookXMLPath !in za.directory) {
-		return SheetNameId[].init;
-	}
-
-	auto dom = za.expand(za.directory[workbookXMLPath])
-                 .convertToString()
-                 .parseDOM();
-	if (dom.children.length != 1) {
-		return [];
-	}
-
-	auto workbook = dom.children[0];
-	const sheetName = workbook.name == "workbook" ? "sheets" : "s:sheets";
-	if (workbook.name != "workbook" && workbook.name != "s:workbook") {
-		return [];
-	}
-
-	auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
-	if (sheetsRng.empty) {
-		return [];
-	}
-
-	return sheetsRng.front.children
-		.map!(s => SheetNameId(
-					s.attributes.filter!(a => a.name == "name").front.value
-						.specialCharacterReplacementReverse(),
-					s.attributes.filter!(a => a.name == "sheetId").front
-						.value.to!int(),
-					s.attributes.filter!(a => a.name == "r:id").front.value,
-				)
-		)
-		.array
-		.sort!((a, b) => a.id < b.id)
-		.release;
+	return File.fromPath(filename).sheetNameIds();
 }
 
 version(xlsxreader_test)
