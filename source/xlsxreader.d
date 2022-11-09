@@ -643,6 +643,7 @@ struct File {
     }
 
 	/// Get (and cache) DOM.
+	pragma(msg, __FILE__, "(", __LINE__, ",1): Debug: ", typeof(DOMEntity!string.tupleof));
 	private DOMEntity!string getDOM() @safe /* TODO: pure */ {
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
@@ -718,18 +719,19 @@ string convertToString(in ubyte[] d) @trusted {
 	import std.encoding;
 	const b = getBOM(d);
 	switch(b.schema) {
-		case BOM.none:
-			return cast(string)d;
-		case BOM.utf8:
-			return cast(string)(d[3 .. $]);
-		case BOM.utf16be: goto default;
-		case BOM.utf16le: goto default;
-		case BOM.utf32be: goto default;
-		case BOM.utf32le: goto default;
-		default:
-			string ret;
-			transcode(d, ret);
-			return ret;
+	case BOM.none:
+		return cast(string)d;
+	case BOM.utf8:
+		return cast(string)(d[3 .. $]);
+	case BOM.utf16be:
+	case BOM.utf16le:
+	case BOM.utf32be:
+	case BOM.utf32le:
+		goto default;
+	default:
+		string ret;
+		transcode(d, ret);
+		return ret;
 	}
 }
 
