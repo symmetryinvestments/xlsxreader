@@ -1,7 +1,11 @@
 .dub
+dub.selections.json
+
 docs.json
-__dummy.html
 docs/
+__dummy.html
+
+libxlsxreader.a
 /xlsxreader
 xlsxreader.so
 xlsxreader.dylib
@@ -9,10 +13,10 @@ xlsxreader.dll
 xlsxreader.a
 xlsxreader.lib
 xlsxreader-test-*
+
 *.exe
 *.o
 *.obj
 *.lst
-libxlsxreader.a
-dub.selections.json
+
 profilegc.log
