@@ -19,7 +19,27 @@ buildType "unittest" {
 	dflags "-fsanitize=address" platform="posix-ldc"
 }
 
-buildType "release-unittest" {
+buildType "unittest-release" {
 	buildOptions "unittests" "releaseMode" "optimize" "inline"
+	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+}
+
+buildType "unittest-profile" {
+	buildOptions "unittests" "debugInfo" "profile"
+	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+}
+
+buildType "unittest-profile-gc" {
+	buildOptions "unittests" "debugInfo" "profileGC"
+	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+}
+
+buildType "unittest-release-profile" {
+	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profile"
+	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
+}
+
+buildType "unittest-release-profile-gc" {
+	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profileGC"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
