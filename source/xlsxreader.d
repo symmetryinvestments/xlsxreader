@@ -653,7 +653,7 @@ struct File {
 		return _dom;
 	}
 
-	private RelationshipsById relationships() @safe {
+	private RelationshipsById relationships() @safe /* TODO: pure */ {
 		if (_rels is null)
 			_rels = parseRelationships(_za, _za.directory[relsXMLPath]);
 		return _rels;
