@@ -650,14 +650,12 @@ struct File {
 		if (ent is null)
 			return typeof(return).init;
 		if (_dom == _dom.init) {
-			delegate() @trusted {
-				_dom = _za.expandTrusted(*ent)
-                          .convertToString()
-                          .parseDOM!(Config(SkipComments.yes, // we don’t comments
-                                            SkipPI.no, // TODO: change to SkipPI.yes and validate
-                                            SplitEmpty.no, // default is ok
-                                            ThrowOnEntityRef.yes))(); // default is ok
-			}();
+            _dom = _za.expandTrusted(*ent)
+                      .convertToString()
+                      .parseDOM!(Config(SkipComments.no, // TODO: change to SkipComments.yes and validate
+                                        SkipPI.no, // TODO: change to SkipPI.yes and validate
+                                        SplitEmpty.no, // default is ok
+                                        ThrowOnEntityRef.yes))(); // default is ok
 		}
 		return _dom;
 	}
