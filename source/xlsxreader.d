@@ -587,10 +587,10 @@ private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 private static immutable relsXMLPath = "xl/_rels/workbook.xml.rels";
 
 private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted /* TODO: pure */ {
-    enum timeMe = false;
-    static if (timeMe) auto sw = StopWatch(AutoStart.yes);
+    enum tme = false;           // time me
+    static if (tme) auto sw = StopWatch(AutoStart.yes);
 	auto ret = za.expand(de);
-    static if (timeMe) writeln("expand length:", ret.length, " took: ", sw.peek());
+    static if (tme) writeln("expand length:", ret.length, " took: ", sw.peek());
     return ret;
 }
 
