@@ -1264,7 +1264,7 @@ version(xlsxreader_test) @safe unittest {
 
 version(xlsxreader_test) @safe unittest {
 	auto s = readSheet("multitable.xlsx", "Sheet3");
-	writeln(s.table[0][0].xmlValue);
+	// writeln(s.table[0][0].xmlValue);
 	assert(s.table[0][0].xmlValue.to!long(),
 			format("%s", s.table[0][0].xmlValue));
 	//assert(s.table[0][0].canConvertTo(CellType.bool_));
@@ -1310,7 +1310,7 @@ version(xlsxreader_test) @safe unittest {
 version(xlsxreader_test) @safe unittest {
 	import std.math : isClose;
 	auto sheet = readSheet("toto.xlsx", "Trades");
-	writefln("%(%s\n%)", sheet.cells);
+	// writefln("%(%s\n%)", sheet.cells);
 
 	auto r = sheet.getRowString(1, 0, 2).array;
 
