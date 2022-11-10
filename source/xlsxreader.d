@@ -1186,6 +1186,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 			.replace("&amp;", "&");
 }
 
+version(none) // disabled because specialCharacterReplacementReverse is deprecated
 version(xlsxreader_test) @safe pure nothrow unittest {
 	assert("&quot;".specialCharacterReplacementReverse == "\"");
 	assert("&apos;".specialCharacterReplacementReverse == "'");
