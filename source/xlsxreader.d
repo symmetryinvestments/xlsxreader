@@ -587,7 +587,11 @@ private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 private static immutable relsXMLPath = "xl/_rels/workbook.xml.rels";
 
 private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted /* TODO: pure */ {
-	return za.expand(de);
+    enum timeMe = false;
+    static if (timeMe) auto sw = StopWatch(AutoStart.yes);
+	auto ret = za.expand(de);
+    static if (timeMe) writeln("expand length:", ret.length, " took: ", sw.peek());
+    return ret;
 }
 
 struct Relationships {
