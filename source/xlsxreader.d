@@ -659,6 +659,8 @@ struct File {
                                         SkipPI.no, // TODO: change to SkipPI.yes and validate
                                         SplitEmpty.no, // default is ok
                                         ThrowOnEntityRef.yes))(); // default is ok
+			enforce(_dom.children.length == 1,
+					"Expected a single DOM child but got " ~ _dom.children.length.to!string);
             static if (tme) writeln("parseDOM length:", est.length, " took: ", sw.peek());
 		}
 		return _dom;
@@ -666,8 +668,35 @@ struct File {
 
 	private RelationshipsById relationships() @safe /* TODO: pure */ {
 		if (_rels is null)
-			_rels = parseRelationships(_za, _za.directory[relsXMLPath]);
+			_rels = parseRelationships(_za.directory[relsXMLPath]);
 		return _rels;
+	}
+
+	private RelationshipsById parseRelationships(ArchiveMember am) @safe {
+		auto dom = _za.expandTrusted(am)
+					  .convertToString()
+					  .parseDOM();
+		enforce(dom.children.length == 1,
+				"Expected a single DOM child but got " ~ dom.children.length.to!string);
+
+		auto rel = dom.children[0];
+		enforce(rel.name == "Relationships",
+				"Expected rel.name to be \"Relationships\" but was " ~ rel.name);
+
+		typeof(return) ret;
+		static if (is(typeof(ret.reserve(size_t.init)) == void)) {
+			/* Use reserve() when AA gets it or `RelationshipsById` is a custom hash
+			 * map. */
+			ret.reserve(rel.children.length);
+		}
+		foreach (ref r; rel.children.filter!(c => c.name == "Relationship")) {
+			Relationships tmp;
+			tmp.id = r.attributes.filter!(a => a.name == "Id").front.value;
+			tmp.file = r.attributes.filter!(a => a.name == "Target").front.value;
+			ret[tmp.id] = tmp;
+		}
+		enforce(!ret.empty);
+		return ret;
 	}
 
 	const string filename;
@@ -760,7 +789,8 @@ version(xlsxreader_test) @safe unittest {
 	assert(r[0].id == 1);
 }
 
-RelationshipsById parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
+deprecated("use File.relationships(ArchiveMember am) instead")
+RelationshipsById parseRelationships(ZipArchive za, ArchiveMember am) @safe {
 	auto dom = za.expandTrusted(am)
 				 .convertToString()
 				 .parseDOM();
