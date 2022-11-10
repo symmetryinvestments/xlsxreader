@@ -14,7 +14,6 @@ import std.datetime.stopwatch : StopWatch, AutoStart;
 import std.exception : enforce;
 import std.file : read, exists, readText;
 import std.format : format;
-import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : Nullable, nullable;
@@ -626,6 +625,7 @@ struct File {
             return [];
 
 		return sheetsRng.front.children.map!(
+            // TODO: optimize by using indexOf or find
 			s => SheetNameId(s.attributes
 							  .filter!(a => a.name == "name")
 							  .front
@@ -939,6 +939,7 @@ private bool canConvertToLong(in string s) @safe pure nothrow @nogc {
 version(ctRegex_test)
 version(unittest)
 {
+	import std.regex : ctRegex, matchAll;
 	private static immutable rs = r"[\+-]{0,1}[0-9][0-9]*\.[0-9]*";
 	private static immutable rgx = ctRegex!rs;
 	private bool canConvertToDoubleOld(in string s) @safe {
