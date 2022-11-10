@@ -373,8 +373,7 @@ struct Column(T) {
 	}
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	import std.range : isForwardRange;
 	import std.meta : AliasSeq;
 	static foreach (T; AliasSeq!(long,double,DateTime,TimeOfDay,Date,string)) {{
@@ -443,8 +442,7 @@ long dateToLong(Date d) @safe {
 	return nSerialDate;
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
 	foreach (const d; ds) {
 		const long l = dateToLong(d);
@@ -470,8 +468,7 @@ double timeOfDayToDouble(TimeOfDay tod) @safe {
 	return (h + m + s) / (24.0 * 60.0 * 60.0);
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
 		 TimeOfDay(23, 59, 59), TimeOfDay(0, 0, 0)];
@@ -496,8 +493,7 @@ DateTime doubleToDateTime(double d) @safe {
 	return DateTime(dt, t);
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto ds = [ Date(1900,2,1), Date(1901, 2, 28), Date(2019, 06, 05) ];
 	auto tods = [ TimeOfDay(23, 12, 11), TimeOfDay(11, 0, 11),
 		 TimeOfDay(0, 0, 0), TimeOfDay(0, 1, 0),
@@ -680,9 +676,8 @@ struct File {
 	private RelationshipsById _rels;
 }
 
-version(xlsxreader_benchmark)
 /// benchmark reading of "multitable.xlsx"
-@safe unittest {
+version(xlsxreader_benchmark) @safe unittest {
 	import std.meta : AliasSeq;
     static void use_bySheet_multitable() @trusted {
         File file = File.fromPath("multitable.xlsx");
@@ -696,9 +691,8 @@ version(xlsxreader_benchmark)
 	}
 }
 
-version(xlsxreader_benchmark)
 /// benchmark reading of "50xP_sheet1.xlsx"
-@safe unittest {
+version(xlsxreader_benchmark) @safe unittest {
 	enum path = "50xP_sheet1.xlsx";
 	import std.meta : AliasSeq;
 	static void use_sheetNamesAndreadSheet() @trusted {
@@ -754,15 +748,13 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 	return File.fromPath(filename).sheetNameIds();
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto r = sheetNames("multitable.xlsx");
 	assert(r[0].name == "wb1");
 	assert(r[0].id == 1);
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto r = sheetNames("sheetnames.xlsx");
 	assert(r[0].name == "A & B ;", r[0].name);
 	assert(r[0].id == 1);
@@ -987,8 +979,7 @@ private bool canConvertToDouble(string s) pure @safe nothrow @nogc {
 	return s.empty;
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	static struct Test {
 		string tt;
 		bool rslt;
@@ -1157,8 +1148,7 @@ Pos toPos(in string s) @safe pure {
 	return Pos(row, col - 1);
 }
 
-version(xlsxreader_test)
-@safe pure unittest {
+version(xlsxreader_test) @safe pure unittest {
 	assert(toPos("A1").col == 0);
 	assert(toPos("Z1").col == 25);
 	assert(toPos("AA1").col == 26);
@@ -1182,8 +1172,7 @@ string specialCharacterReplacement(string s) @safe pure nothrow {
 			.replace("&", "&amp;");
 }
 
-version(xlsxreader_test)
-@safe pure nothrow unittest {
+version(xlsxreader_test) @safe pure nothrow unittest {
 	assert("&".specialCharacterReplacement == "&amp;");
 }
 
@@ -1197,8 +1186,7 @@ string specialCharacterReplacementReverse(string s) @safe pure nothrow {
 			.replace("&amp;", "&");
 }
 
-version(xlsxreader_test)
-@safe pure nothrow unittest {
+version(xlsxreader_test) @safe pure nothrow unittest {
 	assert("&quot;".specialCharacterReplacementReverse == "\"");
 	assert("&apos;".specialCharacterReplacementReverse == "'");
 	assert("&lt;".specialCharacterReplacementReverse == "<");
@@ -1215,8 +1203,7 @@ auto specialCharacterReplacementReverseLazy(string s) @safe pure /* TODO: nothro
 						 "&amp;", "&");
 }
 
-version(xlsxreader_test)
-@safe pure unittest {
+version(xlsxreader_test) @safe pure unittest {
 	assert("&quot;".specialCharacterReplacementReverseLazy.equal("\""));
 	assert("&apos;".specialCharacterReplacementReverseLazy.equal("'"));
 	assert("&lt;".specialCharacterReplacementReverseLazy.equal("<"));
@@ -1224,8 +1211,7 @@ version(xlsxreader_test)
 	assert("&amp;".specialCharacterReplacementReverseLazy.equal("&"));
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	import std.math : isClose;
 	auto r = readSheet("multitable.xlsx", "wb1");
 	assert(isClose(r.table[12][5].xmlValue.to!double(), 26.74),
@@ -1237,8 +1223,7 @@ version(xlsxreader_test)
 		);
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
 
@@ -1256,8 +1241,7 @@ version(xlsxreader_test)
 		.array;
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto s = readSheet("multitable.xlsx", "wb2");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!Date(1, 1, 6);
@@ -1278,8 +1262,7 @@ version(xlsxreader_test)
 	assert(equal(rslt, it2));
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto s = readSheet("multitable.xlsx", "Sheet3");
 	writeln(s.table[0][0].xmlValue);
 	assert(s.table[0][0].xmlValue.to!long(),
@@ -1287,8 +1270,7 @@ version(xlsxreader_test)
 	//assert(s.table[0][0].canConvertTo(CellType.bool_));
 }
 
-version(xlsxreader_test)
-unittest {
+version(xlsxreader_test) unittest {
 	import std.file : dirEntries, SpanMode;
 	import std.traits : EnumMembers;
 	foreach (const de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
@@ -1304,8 +1286,7 @@ unittest {
 	}
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto sheet = readSheet("testworkbook.xlsx", "ws1");
 	//writefln("%(%s\n%)", sheet.cells);
 	//writeln(sheet.toString());
@@ -1326,8 +1307,7 @@ version(xlsxreader_test)
 	assert(equal(c2, r2), format("%s", c2));
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	import std.math : isClose;
 	auto sheet = readSheet("toto.xlsx", "Trades");
 	writefln("%(%s\n%)", sheet.cells);
@@ -1338,16 +1318,14 @@ version(xlsxreader_test)
 	assert(isClose(d, 38204642.510000));
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	const sheet = readSheet("leading_zeros.xlsx", "Sheet1");
 	auto a2 = sheet.cells.filter!(c => c.r == "A2");
 	assert(!a2.empty);
 	assert(a2.front.xmlValue == "0012", format("%s", a2.front));
 }
 
-version(xlsxreader_test)
-@safe unittest {
+version(xlsxreader_test) @safe unittest {
 	auto s = readSheet("datetimes.xlsx", "Sheet1");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!DateTime(0, 0, 2);
@@ -1361,8 +1339,7 @@ version(xlsxreader_test)
 				, target, s.toString()));
 }
 
-version(xlsxreader_test)
-{
+version(xlsxreader_test) {
 	import std.algorithm.comparison : equal;
 }
 
