@@ -25,8 +25,10 @@ import dxml.dom : DOMEntity, EntityType, parseDOM;
 // disabled for now for faster builds
 // version = ctRegex_test;
 
-version(xlsxreader_benchmark)
-	enum runCount = 10;
+version(xlsxreader_profileGC)
+	enum runCount = 1;
+else version(xlsxreader_benchmark)
+    enum runCount = 10;
 
 /** Cell position row 0-based offset. */
 alias RowOffset = uint;
@@ -587,7 +589,7 @@ private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 private static immutable relsXMLPath = "xl/_rels/workbook.xml.rels";
 
 private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted /* TODO: pure */ {
-    enum tme = false;           // time me
+    enum tme = true;            // time me
     static if (tme) auto sw = StopWatch(AutoStart.yes);
 	auto ret = za.expand(de);
     static if (tme) writeln("expand length:", ret.length, " took: ", sw.peek());
@@ -654,12 +656,14 @@ struct File {
 		if (ent is null)
 			return typeof(return).init;
 		if (_dom == _dom.init) {
-            _dom = _za.expandTrusted(*ent)
-                      .convertToString()
-                      .parseDOM!(Config(SkipComments.no, // TODO: change to SkipComments.yes and validate
+            auto est = _za.expandTrusted(*ent).convertToString();
+            enum tme = true;           // time me
+            static if (tme) auto sw = StopWatch(AutoStart.yes);
+            _dom = est.parseDOM!(Config(SkipComments.no, // TODO: change to SkipComments.yes and validate
                                         SkipPI.no, // TODO: change to SkipPI.yes and validate
                                         SplitEmpty.no, // default is ok
                                         ThrowOnEntityRef.yes))(); // default is ok
+            static if (tme) writeln("parseDOM length:", est.length, " took: ", sw.peek());
 		}
 		return _dom;
 	}
