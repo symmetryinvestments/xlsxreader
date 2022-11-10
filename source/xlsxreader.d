@@ -606,7 +606,7 @@ struct File {
 	}
 
     private SheetNameId[] sheetNameIds() @safe /* TODO: pure */ {
-		auto dom = getDOM();
+		auto dom = workbookDOM();
         if (dom.children.length != 1)
             return [];
 
@@ -645,25 +645,25 @@ struct File {
     }
 
 	/// Get (and cache) DOM.
-	private DOMEntity!(string) getDOM() @safe /* TODO: pure */ {
+	private DOMEntity!(string) workbookDOM() @safe /* TODO: pure */ {
 		import dxml.parser : Config, SkipComments, SkipPI, SplitEmpty, ThrowOnEntityRef;
 		auto ent = workbookXMLPath in _za.directory;
 		// TODO: use enforce(ent ! is null); instead?
 		if (ent is null)
 			return typeof(return).init;
-		if (_dom == _dom.init) {
+		if (_wbDOM == _wbDOM.init) {
             auto est = _za.expandTrusted(*ent).convertToString();
             enum tme = true;           // time me
             static if (tme) auto sw = StopWatch(AutoStart.yes);
-            _dom = est.parseDOM!(Config(SkipComments.no, // TODO: change to SkipComments.yes and validate
+            _wbDOM = est.parseDOM!(Config(SkipComments.no, // TODO: change to SkipComments.yes and validate
                                         SkipPI.no, // TODO: change to SkipPI.yes and validate
                                         SplitEmpty.no, // default is ok
                                         ThrowOnEntityRef.yes))(); // default is ok
-			enforce(_dom.children.length == 1,
-					"Expected a single DOM child but got " ~ _dom.children.length.to!string);
+			enforce(_wbDOM.children.length == 1,
+					"Expected a single DOM child but got " ~ _wbDOM.children.length.to!string);
             static if (tme) writeln("parseDOM length:", est.length, " took: ", sw.peek());
 		}
-		return _dom;
+		return _wbDOM;
 	}
 
 	private RelationshipsById relationships() @safe /* TODO: pure */ {
@@ -701,7 +701,7 @@ struct File {
 
 	const string filename;
 	private ZipArchive _za;
-	DOMEntity!string _dom;
+	DOMEntity!string _wbDOM;	///< Workbook.
 	private RelationshipsById _rels;
 }
 
