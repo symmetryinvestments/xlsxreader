@@ -674,6 +674,9 @@ struct File {
 
 	private RelationshipsById parseRelationships(ArchiveMember am) @safe {
 		auto est = _za.expandTrusted(am).convertToString();
+        // import std.digest : digest;
+        // import std.digest.md : MD5;
+        // writeln("am.name:", am.name, " md5:", est.digest!MD5);
 		auto dom = est.parseDOM();
 		enforce(dom.children.length == 1,
 				"Expected a single DOM child but got " ~ dom.children.length.to!string);
