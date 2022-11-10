@@ -719,7 +719,6 @@ version(xlsxreader_benchmark)
 	foreach (const i, fun; funs) {
 		writeln(fun.stringof[0 .. $-2], "(\"", path, "\") took ", results[i]);
 	}
-
 }
 
 /// Sheet name, id and rid.
