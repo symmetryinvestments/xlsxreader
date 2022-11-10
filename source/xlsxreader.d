@@ -721,7 +721,8 @@ struct SheetNameId {
 	string rid;
 }
 
-string convertToString(in ubyte[] d) @trusted {
+/// Strip BOM and convert ubyte[] to a string.
+string convertToString(inout(ubyte)[] d) @trusted {
 	import std.encoding : getBOM, BOM, transcode;
 	const b = getBOM(d);
 	switch(b.schema) {
