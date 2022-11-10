@@ -732,7 +732,7 @@ struct SheetNameId {
 string convertToString(inout(ubyte)[] d) @trusted {
 	import std.encoding : getBOM, BOM, transcode;
 	const b = getBOM(d);
-	switch(b.schema) {
+	switch (b.schema) {
 	case BOM.none:
 		return cast(string)d;
 	case BOM.utf8:
