@@ -762,7 +762,9 @@ version(xlsxreader_test)
 }
 
 RelationshipsById parseRelationships(ZipArchive za, ArchiveMember am) @trusted {
-	auto dom = za.expandTrusted(am).convertToString.parseDOM;
+	auto dom = za.expandTrusted(am)
+				 .convertToString()
+				 .parseDOM();
 	enforce(dom.children.length == 1,
 			"Expected a single DOM child but got " ~ dom.children.length.to!string);
 
