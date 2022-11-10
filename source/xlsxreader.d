@@ -673,9 +673,8 @@ struct File {
 	}
 
 	private RelationshipsById parseRelationships(ArchiveMember am) @safe {
-		auto dom = _za.expandTrusted(am)
-					  .convertToString()
-					  .parseDOM();
+		auto est = _za.expandTrusted(am).convertToString();
+		auto dom = est.parseDOM();
 		enforce(dom.children.length == 1,
 				"Expected a single DOM child but got " ~ dom.children.length.to!string);
 
