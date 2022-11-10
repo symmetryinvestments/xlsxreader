@@ -5,5 +5,3 @@
   module-scope public `parseRelationships` a thin wrapper on top of it. Cache
   the calculation of `parseRelationships` in an AA mapping from `ArchiveMember`
   to `RelationshipsById` if needed and store that AA in private `File` member.
-- Use a single call to `substitute().array()` in `specialCharacterReplacementReverse`
-- Use a single call to `substitute().array()` in `specialCharacterReplacement`
