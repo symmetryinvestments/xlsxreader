@@ -29,12 +29,14 @@ buildType "unittest-release" {
 buildType "benchmark-release" {
 	buildOptions "unittests" "releaseMode" "optimize" "inline"
 	versions "xlsxreader_benchmark"
+	dflags "-mcpu=native"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 }
 
 buildType "benchmark-profile" {
 	buildOptions "unittests" "debugInfo" "profile"
 	versions "xlsxreader_benchmark"
+	dflags "-mcpu=native"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 	preRunCommands "rm -f trace.def trace.log"
 }
@@ -42,6 +44,7 @@ buildType "benchmark-profile" {
 buildType "benchmark-profileGC" { # currently DMD only
 	buildOptions "unittests" "debugInfo" "profileGC"
 	versions "xlsxreader_benchmark" "xlsxreader_profileGC"
+	dflags "-mcpu=native"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 	preRunCommands "rm -f trace.def trace.log"
 }
@@ -49,6 +52,7 @@ buildType "benchmark-profileGC" { # currently DMD only
 buildType "benchmark-release-profile" {
 	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profile"
 	versions "xlsxreader_benchmark"
+	dflags "-mcpu=native"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 	preRunCommands "rm -f trace.def trace.log"
 }
@@ -56,6 +60,7 @@ buildType "benchmark-release-profile" {
 buildType "benchmark-release-profileGC" { # currently DMD only
 	buildOptions "unittests" "releaseMode" "optimize" "debugInfo" "profileGC"
 	versions "xlsxreader_benchmark"
+	dflags "-mcpu=native"
 	dflags "-preview=dip1000" platform="dmd" # dmd-only until ldc 1.31.0 is released
 	preRunCommands "rm -f trace.def trace.log"
 }
