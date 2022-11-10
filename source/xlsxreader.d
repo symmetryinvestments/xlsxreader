@@ -630,7 +630,7 @@ struct File {
 							  .filter!(a => a.name == "name")
 							  .front
 							  .value
-							  .specialCharacterReplacementReverse(),
+							  .specialCharacterReplacementReverseLazy.to!string(),
 							 s.attributes
 							  .filter!(a => a.name == "sheetId")
 							  .front
@@ -1187,9 +1187,9 @@ version(xlsxreader_test)
 	assert("&".specialCharacterReplacement == "&amp;");
 }
 
+deprecated("use specialCharacterReplacementReverseLazy instead")
 string specialCharacterReplacementReverse(string s) @safe pure nothrow {
     import std.array : replace;
-	// TODO: use substitute.array
 	return s.replace("&quot;", "\"")
 			.replace("&apos;", "'")
 			.replace("&lt;", "<")
@@ -1204,6 +1204,24 @@ version(xlsxreader_test)
 	assert("&lt;".specialCharacterReplacementReverse == "<");
 	assert("&gt;".specialCharacterReplacementReverse == ">");
 	assert("&amp;".specialCharacterReplacementReverse == "&");
+}
+
+auto specialCharacterReplacementReverseLazy(string s) @safe pure /* TODO: nothrow @nogc */ {
+    import std.algorithm.iteration : substitute;
+	return s.substitute!("&quot;", "\"",
+						 "&apos;", "'",
+						 "&lt;", "<",
+						 "&gt;", ">",
+						 "&amp;", "&");
+}
+
+version(xlsxreader_test)
+@safe pure unittest {
+	assert("&quot;".specialCharacterReplacementReverseLazy.equal("\""));
+	assert("&apos;".specialCharacterReplacementReverseLazy.equal("'"));
+	assert("&lt;".specialCharacterReplacementReverseLazy.equal("<"));
+	assert("&gt;".specialCharacterReplacementReverseLazy.equal(">"));
+	assert("&amp;".specialCharacterReplacementReverseLazy.equal("&"));
 }
 
 version(xlsxreader_test)
@@ -1221,7 +1239,6 @@ version(xlsxreader_test)
 
 version(xlsxreader_test)
 @safe unittest {
-	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb1");
 	auto r = s.iterateRow!long(15, 1, 6);
 
@@ -1241,7 +1258,6 @@ version(xlsxreader_test)
 
 version(xlsxreader_test)
 @safe unittest {
-	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "wb2");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!Date(1, 1, 6);
@@ -1264,7 +1280,6 @@ version(xlsxreader_test)
 
 version(xlsxreader_test)
 @safe unittest {
-	import std.algorithm.comparison : equal;
 	auto s = readSheet("multitable.xlsx", "Sheet3");
 	writeln(s.table[0][0].xmlValue);
 	assert(s.table[0][0].xmlValue.to!long(),
@@ -1291,7 +1306,6 @@ unittest {
 
 version(xlsxreader_test)
 @safe unittest {
-	import std.algorithm.comparison : equal;
 	auto sheet = readSheet("testworkbook.xlsx", "ws1");
 	//writefln("%(%s\n%)", sheet.cells);
 	//writeln(sheet.toString());
@@ -1334,7 +1348,6 @@ version(xlsxreader_test)
 
 version(xlsxreader_test)
 @safe unittest {
-	import std.algorithm.comparison : equal;
 	auto s = readSheet("datetimes.xlsx", "Sheet1");
 	//writefln("%s\n%(%s\n%)", s.maxPos, s.cells);
 	auto rslt = s.iterateColumn!DateTime(0, 0, 2);
@@ -1346,6 +1359,11 @@ version(xlsxreader_test)
 		];
 	assert(equal(rslt, target), format("\ngot: %s\nexp: %s\ntable %s", rslt
 				, target, s.toString()));
+}
+
+version(xlsxreader_test)
+{
+	import std.algorithm.comparison : equal;
 }
 
 /** Variant of Phobos `benchmark` that, instead of sum all run times, returns
