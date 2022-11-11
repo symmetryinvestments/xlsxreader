@@ -7,7 +7,7 @@ import core.time : Duration;
 import std.algorithm.iteration : filter, map;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
-import std.array : array, empty, front, popFront;
+import std.array : array, empty, front, popFront, Appender;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.datetime.stopwatch : StopWatch, AutoStart;
@@ -760,9 +760,9 @@ string convertToString(inout(ubyte)[] d) @trusted {
 	const b = getBOM(d);
 	switch (b.schema) {
 	case BOM.none:
-		return cast(string)d;
+		return cast(string)d;	// TODO: remove this cast
 	case BOM.utf8:
-		return cast(string)(d[3 .. $]);
+		return cast(string)(d[3 .. $]); // TODO: remove this cast
 	case BOM.utf16be:
 	case BOM.utf16le:
 	case BOM.utf32be:
@@ -1087,7 +1087,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) /* TODO: @safe */ {
 
 	auto rows = sdRng.front.children.filter!(r => r.name == "row");
 
-	typeof(return) ret;
+	Appender!(typeof(return)) ret; // TODO: reserve()?
 	foreach (ref row; rows) {
 		if (row.type != EntityType.elementStart || row.children.empty) {
 			continue;
@@ -1137,7 +1137,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) /* TODO: @safe */ {
 			ret ~= tmp;
 		}
 	}
-	return ret;
+	return ret.data;			// TODO: assumeUnique?
 }
 
 Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted pure {
