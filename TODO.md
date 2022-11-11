@@ -25,3 +25,5 @@
   the calculation of `parseRelationships` in an AA mapping from `ArchiveMember`
   to `RelationshipsById` if needed and store that AA in private `File` member.
 - Clean up `parseRelationships`
+- Replace `assert(dom.children.length == 1);` with `enforce(dom.children.length == 1);`
+  and similarly for other asserts.
