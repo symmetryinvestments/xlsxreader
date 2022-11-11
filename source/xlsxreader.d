@@ -20,6 +20,7 @@ import std.typecons : Nullable, nullable;
 import std.zip;
 import mir.algebraic : Algebraic;
 import dxml.dom : DOMEntity, EntityType, parseDOM;
+import dxml.util : decodeXML;
 
 // disabled for now for faster builds
 // version = ctRegex_test;
@@ -626,7 +627,7 @@ struct File {
 							  .filter!(a => a.name == "name")
 							  .front
 							  .value
-							  .specialCharacterReplacementReverseLazy.to!string(),
+							  .decodeXML(),
 							 s.attributes
 							  .filter!(a => a.name == "sheetId")
 							  .front
@@ -908,11 +909,11 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 					&& !tORr.children.empty)
 			{
 				//ret ~= Data(convert(tORr.children[0].text));
-				ret ~= tORr.children[0].text.specialCharacterReplacementReverseLazy.to!string;
+				ret ~= tORr.children[0].text.decodeXML;
 			} else if (tORr.name == "r") {
 				foreach (ref r; tORr.children.filter!(r => r.name == "t")) {
 					if (r.type == EntityType.elementStart && !r.children.empty) {
-						tmp ~= r.children[0].text.specialCharacterReplacementReverseLazy.to!string;
+						tmp ~= r.children[0].text.decodeXML;
 					}
 				}
 			} else {
@@ -922,7 +923,7 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 		}
 		if (!tmp.empty) {
 			//ret ~= Data(convert(tmp));
-			ret ~= tmp.specialCharacterReplacementReverseLazy.to!string;
+			ret ~= tmp.decodeXML;
 		}
 	}
 	return ret;
@@ -1040,7 +1041,7 @@ version(xlsxreader_test) @safe unittest {
 	}
 }
 
-deprecated("use specialCharacterReplacementReverseLazy.to!string instead")
+deprecated("use dxml.util.decodeXML instead")
 string removeSpecialCharacter(string s) {
 	struct ToRe {
 		string from;
@@ -1148,14 +1149,14 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 				format("'%s' not in [%s]", c.t, excepted));
 		if (c.t.empty) {
 			//c.xmlValue = convert(c.v);
-			c.xmlValue = c.v.specialCharacterReplacementReverseLazy.to!string;
+			c.xmlValue = c.v.decodeXML;
 		} else if (canFind(same, c.t)) {
 			//c.xmlValue = convert(c.v);
-			c.xmlValue = c.v.specialCharacterReplacementReverseLazy.to!string;
+			c.xmlValue = c.v.decodeXML;
 		} else if (c.t == "b") {
 			//logf("'%s' %s", c.v, c);
 			//c.xmlValue = c.v == "1";
-			c.xmlValue = c.v.specialCharacterReplacementReverseLazy.to!string;
+			c.xmlValue = c.v.decodeXML;
 		} else {
 			if (!c.v.empty) {
 				size_t idx = to!size_t(c.v);
@@ -1210,7 +1211,7 @@ version(xlsxreader_test) @safe pure nothrow unittest {
 	assert("&".specialCharacterReplacement == "&amp;");
 }
 
-deprecated("use specialCharacterReplacementReverseLazy instead")
+deprecated("use dxml.util.decodeXML instead")
 string specialCharacterReplacementReverse(string s) @safe pure nothrow {
     import std.array : replace;
     // TODO: reuse existing Phobos function or generalize to all special characters
@@ -1228,23 +1229,6 @@ version(xlsxreader_test) @safe pure nothrow unittest {
 	assert("&lt;".specialCharacterReplacementReverse == "<");
 	assert("&gt;".specialCharacterReplacementReverse == ">");
 	assert("&amp;".specialCharacterReplacementReverse == "&");
-}
-
-auto specialCharacterReplacementReverseLazy(string s) @safe pure /* TODO: nothrow @nogc */ {
-    import std.algorithm.iteration : substitute;
-	return s.substitute!("&quot;", "\"",
-						 "&apos;", "'",
-						 "&lt;", "<",
-						 "&gt;", ">",
-						 "&amp;", "&");
-}
-
-version(xlsxreader_test) @safe pure unittest {
-	assert("&quot;".specialCharacterReplacementReverseLazy.equal("\""));
-	assert("&apos;".specialCharacterReplacementReverseLazy.equal("'"));
-	assert("&lt;".specialCharacterReplacementReverseLazy.equal("<"));
-	assert("&gt;".specialCharacterReplacementReverseLazy.equal(">"));
-	assert("&amp;".specialCharacterReplacementReverseLazy.equal("&"));
 }
 
 version(xlsxreader_test) @safe unittest {
