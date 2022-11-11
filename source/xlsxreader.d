@@ -883,7 +883,7 @@ private Sheet extractSheet(ZipArchive za,
 	return typeof(return)(sheetName, cells, table, maxPos);
 }
 
-string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
+string[] readSharedEntries(ZipArchive za, ArchiveMember am) @safe {
 	auto dom = za.expandTrusted(am).convertToString().parseDOM(); // TODO: cache
 	if (dom.type != EntityType.elementStart)
 		return typeof(return).init;
