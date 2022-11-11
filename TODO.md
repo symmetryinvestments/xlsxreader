@@ -1,5 +1,7 @@
 - Make `readCells` safe
 - Cache parts or whole calculation of `dom` in `readCells`
+- Can we reserve ret in `readCells?` by looking up dimensions somewhere in
+  DOM. Print string passed to DOM and look.
 - Replace calls to array append `~=` with `Appender.put()` taking a range if possible
 - Clean up `readCells`
 - Clean up `insertValueIntoCell`
