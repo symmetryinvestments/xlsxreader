@@ -884,24 +884,24 @@ private Sheet extractSheet(ZipArchive za,
 }
 
 string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
-	ubyte[] ss = za.expand(am);
-	string ssData = convertToString(ss);
-	auto dom = parseDOM(ssData);
-	string[] ret;
-	if (dom.type != EntityType.elementStart) {
-		return ret;
-	}
+	ubyte[] ss = za.expand(am);	// TODO: merge
+	string ssData = convertToString(ss); // TODO: merge
+	auto dom = parseDOM(ssData);		 // TODO: merge and cache
+	if (dom.type != EntityType.elementStart)
+		return typeof(return).init;
 	assert(dom.children.length == 1);
+
 	auto sst = dom.children[0];
 	assert(sst.name == "sst");
-	if (sst.type != EntityType.elementStart || sst.children.empty) {
-		return ret;
-	}
+
+	if (sst.type != EntityType.elementStart || sst.children.empty)
+		return typeof(return).init;
 	auto siRng = sst.children.filter!(c => c.name == "si");
+
+	Appender!(typeof(return)) ret;	// TODO: reserve?
 	foreach (ref si; siRng) {
-		if (si.type != EntityType.elementStart) {
+		if (si.type != EntityType.elementStart)
 			continue;
-		}
 		//ret ~= extractData(si);
 		string tmp;
 		foreach (ref tORr; si.children) {
@@ -926,7 +926,7 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 			ret ~= tmp.decodeXML;
 		}
 	}
-	return ret;
+	return ret.data;
 }
 
 string extractData(DOMEntity!string si) {
