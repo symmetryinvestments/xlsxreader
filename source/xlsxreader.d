@@ -854,18 +854,17 @@ private Sheet extractSheet(ZipArchive za,
                            in string rid, in string sheetName) @trusted {
 	string[] ss;
 	if (ArchiveMember* amPtr = sharedStringXMLPath in za.directory)
-		ss = readSharedEntries(za, *amPtr);
-	//logf("%s", ss);
+		ss = readSharedEntries(za, *amPtr);                         // TODO: cache this into File.sharedStrings
 
-	const Relationships* sheetRel = rid in rels;
-	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid,
-                                      filename));
+	const Relationships* sheetRel = rid in rels; // TODO: move this calculation to caller and pass Relationships as rels
+	enforce(sheetRel !is null, format("Could not find '%s' in '%s'", rid, filename));
 	const fn = "xl/" ~ eatXlPrefix(sheetRel.file);
 	ArchiveMember* sheet = fn in za.directory;
 	enforce(sheet !is null, format("sheetRel.file orig '%s', fn %s not in [%s]",
 				sheetRel.file, fn, za.directory.keys()));
 
-	auto cells = insertValueIntoCell(readCells(za, *sheet), ss);
+    Cell[] cells1 = readCells(za, *sheet); // hot spot!
+	Cell[] cells = insertValueIntoCell(cells1, ss);
 
 	Pos maxPos;
 	foreach (ref c; cells) {
@@ -873,6 +872,8 @@ private Sheet extractSheet(ZipArchive za,
 		maxPos = elementMax(maxPos, c.position);
 	}
 
+    // TODO: 1. contruct this lazily in Sheet upon use and cache
+    // TODO: 2. deprecate it
 	auto table = new Cell[][](maxPos.row + 1, maxPos.col + 1);
 	foreach (const ref c; cells) {
 		table[c.position.row][c.position.col] = c;
@@ -907,11 +908,11 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 					&& !tORr.children.empty)
 			{
 				//ret ~= Data(convert(tORr.children[0].text));
-				ret ~= tORr.children[0].text.removeSpecialCharacter();
+				ret ~= tORr.children[0].text.specialCharacterReplacementReverseLazy.to!string;
 			} else if (tORr.name == "r") {
 				foreach (ref r; tORr.children.filter!(r => r.name == "t")) {
 					if (r.type == EntityType.elementStart && !r.children.empty) {
-						tmp ~= r.children[0].text.removeSpecialCharacter();
+						tmp ~= r.children[0].text.specialCharacterReplacementReverseLazy.to!string;
 					}
 				}
 			} else {
@@ -921,7 +922,7 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 		}
 		if (!tmp.empty) {
 			//ret ~= Data(convert(tmp));
-			ret ~= tmp.removeSpecialCharacter();
+			ret ~= tmp.specialCharacterReplacementReverseLazy.to!string;
 		}
 	}
 	return ret;
@@ -1039,6 +1040,7 @@ version(xlsxreader_test) @safe unittest {
 	}
 }
 
+deprecated("use specialCharacterReplacementReverseLazy.to!string instead")
 string removeSpecialCharacter(string s) {
 	struct ToRe {
 		string from;
@@ -1146,14 +1148,14 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 				format("'%s' not in [%s]", c.t, excepted));
 		if (c.t.empty) {
 			//c.xmlValue = convert(c.v);
-			c.xmlValue = c.v.removeSpecialCharacter();
+			c.xmlValue = c.v.specialCharacterReplacementReverseLazy.to!string;
 		} else if (canFind(same, c.t)) {
 			//c.xmlValue = convert(c.v);
-			c.xmlValue = c.v.removeSpecialCharacter();
+			c.xmlValue = c.v.specialCharacterReplacementReverseLazy.to!string;
 		} else if (c.t == "b") {
 			//logf("'%s' %s", c.v, c);
 			//c.xmlValue = c.v == "1";
-			c.xmlValue = c.v.removeSpecialCharacter();
+			c.xmlValue = c.v.specialCharacterReplacementReverseLazy.to!string;
 		} else {
 			if (!c.v.empty) {
 				size_t idx = to!size_t(c.v);
@@ -1211,6 +1213,7 @@ version(xlsxreader_test) @safe pure nothrow unittest {
 deprecated("use specialCharacterReplacementReverseLazy instead")
 string specialCharacterReplacementReverse(string s) @safe pure nothrow {
     import std.array : replace;
+    // TODO: reuse existing Phobos function or generalize to all special characters
 	return s.replace("&quot;", "\"")
 			.replace("&apos;", "'")
 			.replace("&lt;", "<")
