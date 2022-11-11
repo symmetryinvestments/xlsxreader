@@ -702,25 +702,18 @@ struct File {
 		return ret;
 	}
 
+	private string[] sharedEntries() @safe /* TODO: pure */ {
+		if (_sharedEntries is null)
+			if (ArchiveMember* amPtr = sharedStringXMLPath in _za.directory)
+				_sharedEntries = readSharedEntries(_za, *amPtr);
+		return _sharedEntries;
+	}
+
 	const string filename;
 	private ZipArchive _za;
-	DOMEntity!string _wbDOM;	///< Workbook.
+	private DOMEntity!string _wbDOM;	///< Workbook.
 	private RelationshipsById _rels;
-}
-
-/// benchmark reading of "multitable.xlsx"
-version(xlsxreader_benchmark) @safe unittest {
-	import std.meta : AliasSeq;
-    static void use_bySheet_multitable() @trusted {
-        File file = File.fromPath("multitable.xlsx");
-        foreach (ref sheet; file.bySheet) {
-        }
-    }
-	alias funs = AliasSeq!(use_bySheet_multitable);
-	auto results = benchmarkMin!(funs)(runCount);
-	foreach (const i, fun; funs) {
-		writeln(fun.stringof, " took ", results[i]);
-	}
+	private string[] _sharedEntries;
 }
 
 /// benchmark reading of "50xP_sheet1.xlsx"
