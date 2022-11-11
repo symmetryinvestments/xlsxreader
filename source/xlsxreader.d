@@ -1145,11 +1145,11 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
 	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach (ref Cell c; cells) {
-		assert(canFind(excepted, c.t) || c.t.empty,
+		assert(excepted.canFind(c.t) || c.t.empty,
 			   format("'%s' not in [%s]", c.t, excepted));
 		if (c.t.empty) {
 			c.xmlValue = c.v.decodeXML;
-		} else if (canFind(same, c.t)) {
+		} else if (same.canFind(c.t)) {
 			c.xmlValue = c.v.decodeXML;
 		} else if (c.t == "b") {
 			c.xmlValue = c.v.decodeXML;
