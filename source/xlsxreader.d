@@ -1071,24 +1071,23 @@ string removeSpecialCharacter(string s) {
 	return replaceStrings(s);
 }
 
-Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
-	Cell[] ret;
-	ubyte[] ss = za.expand(am);
-	string ssData = convertToString(ss);
-	auto dom = parseDOM(ssData);
+Cell[] readCells(ZipArchive za, ArchiveMember am) /* TODO: @safe */ {
+	auto dom = za.expandTrusted(am).convertToString().parseDOM(); // TODO: cache?
 	assert(dom.children.length == 1);
+
 	auto ws = dom.children[0];
-	if (ws.name != "worksheet") {
-		return ret;
-	}
+	if (ws.name != "worksheet")
+		return typeof(return).init;
+
 	auto sdRng = ws.children.filter!(c => c.name == "sheetData");
 	assert(!sdRng.empty);
-	if (sdRng.front.type != EntityType.elementStart) {
-		return ret;
-	}
-	auto rows = sdRng.front.children
-		.filter!(r => r.name == "row");
 
+	if (sdRng.front.type != EntityType.elementStart)
+		return typeof(return).init;
+
+	auto rows = sdRng.front.children.filter!(r => r.name == "row");
+
+	typeof(return) ret;
 	foreach (ref row; rows) {
 		if (row.type != EntityType.elementStart || row.children.empty) {
 			continue;
@@ -1142,8 +1141,8 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 }
 
 Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted pure {
-	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
-	immutable same = ["n", "e", "str", "inlineStr"];
+	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"]; // TODO: what are these?
+	immutable same = ["n", "e", "str", "inlineStr"];			   // TODO: what are these?
 	foreach (ref Cell c; cells) {
 		assert(excepted.canFind(c.t) || c.t.empty,
 			   format("'%s' not in [%s]", c.t, excepted));
