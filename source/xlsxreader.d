@@ -1153,11 +1153,9 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 			c.xmlValue = c.v.decodeXML;
 		} else if (c.t == "b") {
 			c.xmlValue = c.v.decodeXML;
-		} else {
-			if (!c.v.empty) {
-				size_t idx = to!size_t(c.v);
-				c.xmlValue = ss[idx];
-			}
+		} else if (!c.v.empty) {
+			size_t idx = to!size_t(c.v);
+			c.xmlValue = ss[idx];
 		}
 	}
 	return cells;
