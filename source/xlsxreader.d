@@ -1141,7 +1141,7 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 	return ret;
 }
 
-Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
+Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted pure {
 	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
 	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach (ref Cell c; cells) {
