@@ -896,10 +896,9 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 
 	if (sst.type != EntityType.elementStart || sst.children.empty)
 		return typeof(return).init;
-	auto siRng = sst.children.filter!(c => c.name == "si");
 
 	Appender!(typeof(return)) ret;	// TODO: reserve?
-	foreach (ref si; siRng) {
+	foreach (ref si; sst.children.filter!(c => c.name == "si")) {
 		if (si.type != EntityType.elementStart)
 			continue;
 		//ret ~= extractData(si);
