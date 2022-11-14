@@ -1,5 +1,7 @@
 /* TODO: Qualify `std.zip.ZipArchive` members as, at least, `pure` and then the
    functions in there that use them.
+
+   See: https://github.com/troldal/OpenXLSX
 */
 module xlsxreader;
 
@@ -732,7 +734,7 @@ version(xlsxreader_benchmark) @safe unittest {
 			i++;
         }
     }
-	alias funs = AliasSeq!(use_sheetNamesAndreadSheet,
+	alias funs = AliasSeq!(/* use_sheetNamesAndreadSheet, */
 						   use_bySheet);
 	auto results = benchmarkMin!(funs)(runCount);
 	foreach (const i, fun; funs) {
