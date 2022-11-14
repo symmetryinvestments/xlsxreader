@@ -601,8 +601,8 @@ struct Relationships {
 
 alias RelationshipsById = Relationships[string];
 
-/// File.
-struct File {
+/// Workbook.
+struct Workbook {
 	// TODO: convert to constructor this(in string filename)?
 	static typeof(this) fromPath(in string filename) @trusted {
         return typeof(return)(filename, new ZipArchive(read(filename)));
@@ -772,7 +772,7 @@ string convertToString(inout(ubyte)[] d) @trusted {
 
 /// Read sheet names stored in `filename`.
 SheetNameId[] sheetNames(in string filename) @trusted {
-	return File.fromPath(filename).sheetNameIds();
+	return Workbook.fromPath(filename).sheetNameIds();
 }
 
 version(xlsxreader_test) @safe unittest {
