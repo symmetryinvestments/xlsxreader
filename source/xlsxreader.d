@@ -728,7 +728,7 @@ version(xlsxreader_benchmark) @safe unittest {
 		}
 	}
     static void use_bySheet() @trusted {
-        File file = File.fromPath(path);
+        auto file = Workbook.fromPath(path);
 		size_t i = 0;
         foreach (ref sheet; file.bySheet) {
 			i++;
