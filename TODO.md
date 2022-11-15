@@ -1,5 +1,7 @@
 # TODO
 
+- Use mir-core UDAs to ignore certain fields?
+
 - Clean up `readSharedEntries`
 
 - Replace row.attributes.filter!(a => a.name == "r").front with row.attributeNamed("r")
