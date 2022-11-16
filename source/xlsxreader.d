@@ -32,6 +32,11 @@ version(xlsxreader_profileGC)
 else version(xlsxreader_benchmark)
     enum runCount = 10;
 
+version(xlsxreader_benchmark)
+    enum tme = true;            // time me
+else
+	enum tme = false;			// don’t time
+
 /** Cell position row 0-based offset. */
 alias RowOffset = uint;
 
@@ -587,7 +592,6 @@ private static immutable sharedStringXMLPath = "xl/sharedStrings.xml";
 private static immutable relsXMLPath = "xl/_rels/workbook.xml.rels";
 
 private static expandTrusted(ZipArchive za, ArchiveMember de) @trusted /* TODO: pure */ {
-    enum tme = true;            // time me
     static if (tme) auto sw = StopWatch(AutoStart.yes);
 	auto ret = za.expand(de);
     static if (tme) writeln("expand length:", ret.length, " took: ", sw.peek());
@@ -656,7 +660,6 @@ struct Workbook {
 			return typeof(return).init;
 		if (_wbDOM == _wbDOM.init) {
             auto est = _za.expandTrusted(*ent).convertToString();
-            enum tme = true;           // time me
             static if (tme) auto sw = StopWatch(AutoStart.yes);
             _wbDOM = est.parseDOM!(Config(SkipComments.no, // TODO: change to SkipComments.yes and validate
                                         SkipPI.no, // TODO: change to SkipPI.yes and validate
