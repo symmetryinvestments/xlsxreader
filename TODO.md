@@ -51,3 +51,6 @@
   and similarly for other asserts.
 
 - Qualify some functions in std.zip as pure and then qualify code in xlsxreader.d as pure
+
+- Make sure Sheet.cells is in the same data layout as SIL’s Matrix datatype
+  added in version 2.48.
