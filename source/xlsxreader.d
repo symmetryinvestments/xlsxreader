@@ -787,8 +787,7 @@ version(xlsxreader_test) @safe unittest {
 
 version(xlsxreader_test) @safe unittest {
 	auto r = sheetNames("sheetnames.xlsx");
-	assert(r[0].name == "A & B ;", r[0].name);
-	assert(r[0].id == 1);
+	assert(r == [SheetNameId("A & B ;", 1, "rId2")]);
 }
 
 deprecated("use File.relationships(ArchiveMember am) instead")
