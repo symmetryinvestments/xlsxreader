@@ -1230,6 +1230,40 @@ version(xlsxreader_test) @safe unittest {
 
 version(xlsxreader_test) @safe unittest {
 	auto s = readSheet("multitable.xlsx", "wb1");
+	const expectedCells = [const(Cell)("", 3, "s", "D3", "0", "", "a", const(Pos)(2, 3)),
+						   const(Cell)("", 3, "s", "E3", "1", "", "b", const(Pos)(2, 4)),
+						   const(Cell)("", 4, "s", "D4", "2", "", "1", const(Pos)(3, 3)),
+						   const(Cell)("", 4, "s", "E4", "3", "", "\"one\"", const(Pos)(3, 4)),
+						   const(Cell)("", 5, "s", "D5", "4", "", "2", const(Pos)(4, 3)),
+						   const(Cell)("", 5, "s", "E5", "5", "", "\"two\"", const(Pos)(4, 4)),
+						   const(Cell)("", 6, "s", "D6", "6", "", "3", const(Pos)(5, 3)),
+						   const(Cell)("", 6, "s", "E6", "7", "", "\"three\"", const(Pos)(5, 4)),
+						   const(Cell)("", 7, "", "B7", "", "", "", const(Pos)(6, 1)),
+						   const(Cell)("", 7, "s", "F7", "1", "", "b", const(Pos)(6, 5)),
+						   const(Cell)("", 7, "s", "G7", "0", "", "a", const(Pos)(6, 6)),
+						   const(Cell)("", 8, "n", "C8", "0.504409722222222", "", "0.504409722222222", const(Pos)(7, 2)),
+						   const(Cell)("", 8, "s", "F8", "3", "", "\"one\"", const(Pos)(7, 5)),
+						   const(Cell)("", 8, "s", "G8", "2", "", "1", const(Pos)(7, 6)),
+						   const(Cell)("", 9, "s", "F9", "5", "", "\"two\"", const(Pos)(8, 5)),
+						   const(Cell)("", 9, "s", "G9", "4", "", "2", const(Pos)(8, 6)),
+						   const(Cell)("", 10, "s", "F10", "7", "", "\"three\"", const(Pos)(9, 5)),
+						   const(Cell)("", 10, "s", "G10", "6", "", "3", const(Pos)(9, 6)),
+						   const(Cell)("", 11, "s", "AC11", "8", "", "Foo", const(Pos)(10, 28)),
+						   const(Cell)("", 12, "s", "B12", "9", "", "Hello World", const(Pos)(11, 1)),
+						   const(Cell)("", 13, "n", "E13", "13.37", "", "13.37", const(Pos)(12, 4)),
+						   const(Cell)("", 13, "n", "F13", "26.74", "E13*2", "26.74", const(Pos)(12, 5)),
+						   const(Cell)("", 14, "n", "F14", "-26.74", "-E13*2", "-26.74", const(Pos)(13, 5)),
+						   const(Cell)("", 16, "n", "B16", "1", "", "1", const(Pos)(15, 1)),
+						   const(Cell)("", 16, "n", "C16", "2", "", "2", const(Pos)(15, 2)),
+						   const(Cell)("", 16, "n", "D16", "3", "", "3", const(Pos)(15, 3)),
+						   const(Cell)("", 16, "n", "E16", "4", "", "4", const(Pos)(15, 4)),
+						   const(Cell)("", 16, "n", "F16", "5", "", "5", const(Pos)(15, 5))];
+	assert(s.cells == expectedCells);
+}
+
+version(xlsxreader_test) @safe unittest {
+	auto s = readSheet("multitable.xlsx", "wb1");
+
 	auto r = s.iterateRow!long(15, 1, 6);
 
 	auto expected = [1, 2, 3, 4, 5];
