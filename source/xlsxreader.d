@@ -780,8 +780,9 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 
 version(xlsxreader_test) @safe unittest {
 	auto r = sheetNames("multitable.xlsx");
-	assert(r[0].name == "wb1");
-	assert(r[0].id == 1);
+	assert(r == [SheetNameId("wb1", 1, "rId2"),
+				 SheetNameId("wb2", 2, "rId3"),
+				 SheetNameId("Sheet3", 3, "rId4")]);
 }
 
 version(xlsxreader_test) @safe unittest {
