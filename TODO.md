@@ -49,3 +49,5 @@
 
 - Replace `assert(dom.children.length == 1);` with `enforce(dom.children.length == 1);`
   and similarly for other asserts.
+
+- Qualify some functions in std.zip as pure and then qualify code in xlsxreader.d as pure
