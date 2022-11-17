@@ -21,6 +21,7 @@ import std.traits : isIntegral, isFloatingPoint, isSomeString;
 import std.typecons : Nullable, nullable;
 import std.zip;
 import mir.algebraic : Algebraic;
+import mir.reflection : reflectIgnore;
 import dxml.dom : DOMEntity, EntityType, parseDOM;
 import dxml.util : decodeXML;
 
@@ -111,10 +112,13 @@ enum CellType {
 	string_
 }
 
+alias SILignore = reflectIgnore!"SIL";
+
 /// Excel table.
 struct Table {
 	/* TODO: Should we add rows()/columns() or byRow()/byColumn() or both? */
 	/* TODO: Should both rows() and columns() return `Cell[][]` or `struct Row` and `struct Column` */
+    @SILignore
 	Cell[][] _;
 	alias _ this;		/** For backwards compatibility. */
 }
