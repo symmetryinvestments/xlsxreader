@@ -102,6 +102,7 @@ struct Cell {
 }
 
 /// Cell Type.
+deprecated("this type is unused and will therefore be removed")
 enum CellType {
 	datetime,
 	timeofday,
@@ -699,7 +700,7 @@ struct Workbook {
     }
 
 	/// Returns: eagerly evaluated array of sheets
-    auto sheets() @trusted {	/* TODO: is this needed? */
+    auto sheets() @trusted {
 		return bySheet.array;
     }
 
