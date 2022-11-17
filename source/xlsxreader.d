@@ -656,6 +656,11 @@ struct Workbook {
 			});
     }
 
+	/// Returns: eagerly evaluated array of sheets
+    auto sheets() @trusted {	/* TODO: is this needed? */
+		return bySheet.array;
+    }
+
 	/// Get (and cache) DOM.
 	private DOMEntity!(string) workbookDOM() @safe /* TODO: pure */ {
 		import dxml.parser : Config, SkipComments, SkipPI, SplitEmpty, ThrowOnEntityRef;
