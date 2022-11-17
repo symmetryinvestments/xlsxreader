@@ -55,6 +55,36 @@ struct Pos {
 	ColOffset col;
 }
 
+/** Excel cell address in the format "A1", "A2", ....
+ */
+struct Address {
+    string value;
+}
+
+/** Excel table start position/address.
+ */
+struct Start {
+    Algebraic!(Pos, Address) value;
+}
+
+/** Excel table extents as width * height.
+ */
+struct Extent {
+    size_t width;
+    size_t height;
+}
+
+/** Excel sheet region.
+ */
+struct Region {
+    Start start;
+    Extent extent;
+}
+
+/** Set of Excel sheet regions.
+ */
+alias Regions = Region[];
+
 /// Cell Data.
 alias Data = Algebraic!(bool, long, double, string, DateTime, Date, TimeOfDay);
 
