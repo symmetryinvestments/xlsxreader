@@ -115,8 +115,8 @@ enum CellType {
 struct Table {
 	/* TODO: Should we add rows()/columns() or byRow()/byColumn() or both? */
 	/* TODO: Should both rows() and columns() return `Cell[][]` or `struct Row` and `struct Column` */
-	Cell[][] cellRows;
-	alias cellRows this;
+	Cell[][] _;
+	alias _ this;		/** For backwards compatibility. */
 }
 
 /// Sheet.
