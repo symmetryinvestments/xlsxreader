@@ -1259,6 +1259,9 @@ version(xlsxreader_test) @safe unittest {
 						   const(Cell)("", 16, "n", "E16", "4", "", "4", const(Pos)(15, 4)),
 						   const(Cell)("", 16, "n", "F16", "5", "", "5", const(Pos)(15, 5))];
 	assert(s.cells == expectedCells);
+	assert(s.table.length == 16);
+	foreach (const Cell[] row; s.table)
+		assert(row.length == 29);
 }
 
 version(xlsxreader_test) @safe unittest {
@@ -1315,7 +1318,6 @@ version(xlsxreader_test) unittest {
 	foreach (const de; dirEntries("xlsx_files/", "*.xlsx", SpanMode.depth)
 			.filter!(a => a.name != "xlsx_files/data03.xlsx"))
 	{
-		//writeln(de.name);
 		auto sn = sheetNames(de.name);
 		foreach (const ref s; sn) {
 			auto sheet = readSheet(de.name, s.name);
