@@ -612,6 +612,11 @@ struct Workbook {
         return typeof(return)(filename, new ZipArchive(read(filename)));
 	}
 
+	/* TODO: Is `fromMemory` or `fromBuffer` a better name? */
+	static typeof(this) fromMemory(void[] buffer) @trusted {
+        return typeof(return)("", new ZipArchive(buffer));
+	}
+
     private SheetNameId[] sheetNameIds() @safe /* TODO: pure */ {
 		auto dom = workbookDOM();
         if (dom.children.length != 1)
