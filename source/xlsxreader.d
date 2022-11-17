@@ -64,7 +64,7 @@ struct Address {
 /** Excel table start position/address.
  */
 struct Start {
-    Algebraic!(Pos, Address) value;
+    Algebraic!(Address, Pos) value;
 }
 
 /** Excel table extents as width * height.
@@ -86,7 +86,7 @@ struct Region {
 alias Regions = Region[];
 
 /// Cell Data.
-alias Data = Algebraic!(bool, long, double, string, DateTime, Date, TimeOfDay);
+alias Data = Algebraic!(Date, DateTime, TimeOfDay, bool, double, long, string);
 
 /// Sheet Cell.
 struct Cell {
