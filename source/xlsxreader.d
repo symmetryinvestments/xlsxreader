@@ -111,6 +111,12 @@ enum CellType {
 	string_
 }
 
+/// Excel table.
+struct Table {
+	Cell[][] cellRows;
+	alias cellRows this;
+}
+
 /// Sheet.
 struct Sheet {
 	import std.ascii : toUpper;
@@ -121,7 +127,7 @@ struct Sheet {
 
 	const string name;			///< Name of sheet.
 	private Cell[] _cells;		///< Cells of sheet.
-	Cell[][] table;				// TODO: make this read-only and lazily constructed behind a property
+	Table table;				// TODO: make this read-only and lazily constructed behind a property
 	const Pos maxPos;
 
 	@property string toString() const scope @safe pure {
@@ -918,7 +924,7 @@ private Sheet extractSheet(ZipArchive za,
 		table[c.position.row][c.position.col] = c;
 	}
 
-	return typeof(return)(sheetName, cells, table, maxPos);
+	return typeof(return)(sheetName, cells, Table(table), maxPos);
 }
 
 string[] readSharedEntries(ZipArchive za, ArchiveMember am) @safe {
