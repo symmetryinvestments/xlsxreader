@@ -1,4 +1,4 @@
-module xlsxreader;
+module mir.xlsx;
 
 import std.algorithm.iteration : filter, map, joiner;
 import std.algorithm.mutation : reverse;
