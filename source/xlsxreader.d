@@ -4,14 +4,14 @@ import std.algorithm.iteration : filter, map, joiner;
 import std.algorithm.mutation : reverse;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
-import std.array : array, empty, front, replace, popFront;
+import std.array : replace;
 import std.ascii : isDigit;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
 import std.file : read, exists, readText;
 import std.format : format;
-import std.range : tee;
+import std.range : empty, tee;
 import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
@@ -54,6 +54,17 @@ enum CellType {
 	double_,
 	long_,
 	string_
+}
+
+// A boiled-down version of std.array.array(), producing way less DIP1000 deprecations
+// (the only remaining one is with string elements).
+private auto array(R)(scope R range) {
+	import std.array : appender, front;
+
+	alias E = typeof(range.front);
+	auto a = appender!(E[])();
+	a.put(range);
+	return a.data;
 }
 
 import std.ascii : toUpper;
@@ -852,7 +863,6 @@ string removeSpecialCharacter(string s) {
 
 	string replaceStrings(string s) {
 		import std.algorithm.searching : canFind;
-		import std.array : replace;
 		foreach(const tr; toRe) {
 			while(canFind(s, tr.from)) {
 				s = s.replace(tr.from, tr.to);
