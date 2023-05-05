@@ -95,12 +95,12 @@ struct Sheet {
 
 	// Column
 
-	T[] getColumn(T)(size_t col, size_t startRow, size_t endRow) {
+	T[] getColumn(T)(size_t col, size_t startRow, size_t endRow) @safe return {
 		return this.iterateColumn!T(col, startRow, endRow).array;
 	}
 
 	private enum t = q{
-	%1$s[] getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
+	%1$s[] getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe return {
 		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
@@ -110,46 +110,46 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @safe {
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) {
+	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
 	// Row
 
-	T[] getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
+	T[] getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return this.iterateRow!T(row, startColumn, endColumn).array;
 	}
 
 	private enum t2 = q{
-	%1$s[] getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
+	%1$s[] getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
@@ -159,35 +159,35 @@ struct Sheet {
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @safe {
+	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted /* TODO: remove @trusted when `&this` is stored in a @safe manner in `Row` */ {
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
@@ -202,7 +202,7 @@ struct RowUntyped {
 	const size_t endColumn;
 	size_t cur;
 
-	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
+	this(return Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.row = row;
@@ -211,19 +211,19 @@ struct RowUntyped {
 		this.cur = this.startColumn;
 	}
 
-	@property bool empty() const pure nothrow @nogc @safe {
+	@property bool empty() const pure nothrow @nogc @safe scope {
 		return this.cur >= this.endColumn;
 	}
 
-	void popFront() pure nothrow @nogc @safe {
+	void popFront() pure nothrow @nogc @safe scope {
 		++this.cur;
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc @safe {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe return {
 		return this;
 	}
 
-	@property inout(Cell) front() inout pure nothrow @nogc @safe {
+	@property inout(Cell) front() inout pure nothrow @nogc @safe scope {
 		return this.sheet.table[this.row][this.cur];
 	}
 }
@@ -238,22 +238,22 @@ struct Row(T) {
 		this.read();
 	}
 
-	@property bool empty() const pure nothrow @nogc {
+	@property bool empty() const pure nothrow @nogc scope {
 		return this.ru.empty;
 	}
 
-	void popFront() {
+	void popFront() scope {
 		this.ru.popFront();
 		if(!this.empty) {
 			this.read();
 		}
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc {
+	inout(typeof(this)) save() inout pure nothrow @nogc return {
 		return this;
 	}
 
-	private void read() {
+	private void read() scope {
 		this.front = convertTo!T(this.ru.front.xmlValue);
 	}
 }
@@ -266,7 +266,7 @@ struct ColumnUntyped {
 	const size_t endRow;
 	size_t cur;
 
-	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
+	this(return Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.col = col;
@@ -275,19 +275,19 @@ struct ColumnUntyped {
 		this.cur = this.startRow;
 	}
 
-	@property bool empty() const pure nothrow @nogc @safe {
+	@property bool empty() const pure nothrow @nogc @safe scope {
 		return this.cur >= this.endRow;
 	}
 
-	void popFront() @safe {
+	void popFront() @safe scope {
 		++this.cur;
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc @safe {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe return {
 		return this;
 	}
 
-	@property Cell front() @safe {
+	@property Cell front() @safe scope {
 		return this.sheet.table[this.cur][this.col];
 	}
 }
@@ -303,22 +303,22 @@ struct Column(T) {
 		this.read();
 	}
 
-	@property bool empty() const pure nothrow @nogc {
+	@property bool empty() const pure nothrow @nogc scope {
 		return this.cu.empty;
 	}
 
-	void popFront() {
+	void popFront() scope {
 		this.cu.popFront();
 		if(!this.empty) {
 			this.read();
 		}
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc {
+	inout(typeof(this)) save() inout pure nothrow @nogc return {
 		return this;
 	}
 
-	private void read() {
+	private void read() scope {
 		this.front = convertTo!T(this.cu.front.xmlValue);
 	}
 }
