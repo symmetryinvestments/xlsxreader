@@ -95,13 +95,12 @@ struct Sheet {
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) {
-		auto c = this.iterateColumn!T(col, startRow, endRow);
-		return typeof(return)(c.array);
+	T[] getColumn(T)(size_t col, size_t startRow, size_t endRow) {
+		return this.iterateColumn!T(col, startRow, endRow).array;
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
+	%1$s[] getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
 		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
@@ -145,12 +144,12 @@ struct Sheet {
 
 	// Row
 
-	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
-		return typeof(return)(this.iterateRow!T(row, startColumn, endColumn).array); // TODO: why .array?
+	T[] getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return this.iterateRow!T(row, startColumn, endColumn).array;
 	}
 
 	private enum t2 = q{
-	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
+	%1$s[] getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
@@ -193,34 +192,7 @@ struct Sheet {
 	}
 }
 
-struct Iterator(T) {
-	T[] data;
-
-	this(T[] data) {
-		this.data = data;
-	}
-
-	@property bool empty() const pure nothrow @nogc {
-		return this.data.empty;
-	}
-
-	void popFront() {
-		this.data.popFront();
-	}
-
-	@property T front() {
-		return this.data.front;
-	}
-
-	inout(typeof(this)) save() inout pure nothrow @nogc {
-		return this;
-	}
-
-	// Request random access.
-	inout(T)[] array() inout @safe pure nothrow @nogc {
-		return data;
-	}
-}
+alias Iterator(T) = T[];
 
 ///
 struct RowUntyped {
