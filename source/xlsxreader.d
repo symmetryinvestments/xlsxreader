@@ -106,12 +106,12 @@ struct Sheet {
 
 	// Column
 
-	T[] getColumn(T)(size_t col, size_t startRow, size_t endRow) @safe return {
+	T[] getColumn(T)(size_t col, size_t startRow, size_t endRow) @safe {
 		return this.iterateColumn!T(col, startRow, endRow).array;
 	}
 
 	private enum t = q{
-	%1$s[] getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe return {
+	%1$s[] getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
 		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
@@ -155,12 +155,12 @@ struct Sheet {
 
 	// Row
 
-	T[] getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe return {
+	T[] getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
 		return this.iterateRow!T(row, startColumn, endColumn).array;
 	}
 
 	private enum t2 = q{
-	%1$s[] getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe return {
+	%1$s[] getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
@@ -213,7 +213,7 @@ struct RowUntyped {
 	const size_t endColumn;
 	size_t cur;
 
-	this(return Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
+	this(return scope Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.row = row;
@@ -230,7 +230,7 @@ struct RowUntyped {
 		++this.cur;
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc @safe return {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe return scope {
 		return this;
 	}
 
@@ -260,7 +260,7 @@ struct Row(T) {
 		}
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc return {
+	inout(typeof(this)) save() inout pure nothrow @nogc return scope {
 		return this;
 	}
 
@@ -277,7 +277,7 @@ struct ColumnUntyped {
 	const size_t endRow;
 	size_t cur;
 
-	this(return Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
+	this(return scope Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.col = col;
@@ -294,7 +294,7 @@ struct ColumnUntyped {
 		++this.cur;
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc @safe return {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe return scope {
 		return this;
 	}
 
@@ -325,7 +325,7 @@ struct Column(T) {
 		}
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc return {
+	inout(typeof(this)) save() inout pure nothrow @nogc return scope {
 		return this;
 	}
 
