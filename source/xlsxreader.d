@@ -4,14 +4,14 @@ import std.algorithm.iteration : filter, map, joiner;
 import std.algorithm.mutation : reverse;
 import std.algorithm.searching : all, canFind, startsWith;
 import std.algorithm.sorting : sort;
-import std.array : array, empty, front, replace, popFront;
+import std.array : replace;
 import std.ascii : isDigit;
 import std.conv : to;
 import std.datetime : DateTime, Date, TimeOfDay;
 import std.exception : enforce;
 import std.file : read, exists, readText;
 import std.format : format;
-import std.range : tee;
+import std.range : empty, tee;
 import std.regex;
 import std.stdio;
 import std.traits : isIntegral, isFloatingPoint, isSomeString;
@@ -56,6 +56,17 @@ enum CellType {
 	string_
 }
 
+// A boiled-down version of std.array.array(), producing way less DIP1000 deprecations
+// (the only remaining one is with string elements).
+private auto array(R)(scope R range) {
+	import std.array : appender, front;
+
+	alias E = typeof(range.front);
+	auto a = appender!(E[])();
+	a.put(range);
+	return a.data;
+}
+
 import std.ascii : toUpper;
 ///
 struct Sheet {
@@ -95,13 +106,12 @@ struct Sheet {
 
 	// Column
 
-	Iterator!T getColumn(T)(size_t col, size_t startRow, size_t endRow) {
-		auto c = this.iterateColumn!T(col, startRow, endRow);
-		return typeof(return)(c.array);
+	T[] getColumn(T)(size_t col, size_t startRow, size_t endRow) @safe {
+		return this.iterateColumn!T(col, startRow, endRow).array;
 	}
 
 	private enum t = q{
-	Iterator!(%1$s) getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
+	%1$s[] getColumn%2$s(size_t col, size_t startRow, size_t endRow) @safe {
 		return getColumn!(%1$s)(col, startRow, endRow);
 	}
 	};
@@ -111,46 +121,46 @@ struct Sheet {
 		mixin(format(t, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @safe {
+	ColumnUntyped iterateColumnUntyped(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) {
+	Column!(T) iterateColumn(T)(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(long) iterateColumnLong(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(double) iterateColumnDouble(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(string) iterateColumnString(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(DateTime) iterateColumnDateTime(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(Date) iterateColumnDate(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
-	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @safe {
+	Column!(TimeOfDay) iterateColumnTimeOfDay(size_t col, size_t startRow, size_t endRow) @safe return {
 		return typeof(return)(&this, col, startRow, endRow);
 	}
 
 	// Row
 
-	Iterator!T getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
-		return typeof(return)(this.iterateRow!T(row, startColumn, endColumn).array); // TODO: why .array?
+	T[] getRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe {
+		return this.iterateRow!T(row, startColumn, endColumn).array;
 	}
 
 	private enum t2 = q{
-	Iterator!(%1$s) getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
+	%1$s[] getRow%2$s(size_t row, size_t startColumn, size_t endColumn) @safe {
 		return getRow!(%1$s)(row, startColumn, endColumn);
 	}
 	};
@@ -160,67 +170,40 @@ struct Sheet {
 		mixin(format(t2, T, T[0].toUpper ~ T[1 .. $]));
 	}
 
-	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @safe {
+	RowUntyped iterateRowUntyped(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @trusted /* TODO: remove @trusted when `&this` is stored in a @safe manner in `Row` */ {
+	Row!(T) iterateRow(T)(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(long) iterateRowLong(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(double) iterateRowDouble(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(string) iterateRowString(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(DateTime) iterateRowDateTime(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(Date) iterateRowDate(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 
-	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @safe {
+	Row!(TimeOfDay) iterateRowTimeOfDay(size_t row, size_t startColumn, size_t endColumn) @safe return {
 		return typeof(return)(&this, row, startColumn, endColumn);
 	}
 }
 
-struct Iterator(T) {
-	T[] data;
-
-	this(T[] data) {
-		this.data = data;
-	}
-
-	@property bool empty() const pure nothrow @nogc {
-		return this.data.empty;
-	}
-
-	void popFront() {
-		this.data.popFront();
-	}
-
-	@property T front() {
-		return this.data.front;
-	}
-
-	inout(typeof(this)) save() inout pure nothrow @nogc {
-		return this;
-	}
-
-	// Request random access.
-	inout(T)[] array() inout @safe pure nothrow @nogc {
-		return data;
-	}
-}
+alias Iterator(T) = T[];
 
 ///
 struct RowUntyped {
@@ -230,7 +213,7 @@ struct RowUntyped {
 	const size_t endColumn;
 	size_t cur;
 
-	this(Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
+	this(return scope Sheet* sheet, size_t row, size_t startColumn, size_t endColumn) pure nothrow @nogc @safe {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.row = row;
@@ -239,19 +222,19 @@ struct RowUntyped {
 		this.cur = this.startColumn;
 	}
 
-	@property bool empty() const pure nothrow @nogc @safe {
+	@property bool empty() const pure nothrow @nogc @safe scope {
 		return this.cur >= this.endColumn;
 	}
 
-	void popFront() pure nothrow @nogc @safe {
+	void popFront() pure nothrow @nogc @safe scope {
 		++this.cur;
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc @safe {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe return scope {
 		return this;
 	}
 
-	@property inout(Cell) front() inout pure nothrow @nogc @safe {
+	@property inout(Cell) front() inout pure nothrow @nogc @safe scope {
 		return this.sheet.table[this.row][this.cur];
 	}
 }
@@ -266,22 +249,22 @@ struct Row(T) {
 		this.read();
 	}
 
-	@property bool empty() const pure nothrow @nogc {
+	@property bool empty() const pure nothrow @nogc scope {
 		return this.ru.empty;
 	}
 
-	void popFront() {
+	void popFront() scope {
 		this.ru.popFront();
 		if(!this.empty) {
 			this.read();
 		}
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc {
+	inout(typeof(this)) save() inout pure nothrow @nogc return scope {
 		return this;
 	}
 
-	private void read() {
+	private void read() scope {
 		this.front = convertTo!T(this.ru.front.xmlValue);
 	}
 }
@@ -294,7 +277,7 @@ struct ColumnUntyped {
 	const size_t endRow;
 	size_t cur;
 
-	this(Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
+	this(return scope Sheet* sheet, size_t col, size_t startRow, size_t endRow) @safe {
 		assert(sheet.table.length == sheet.maxPos.row + 1);
 		this.sheet = sheet;
 		this.col = col;
@@ -303,19 +286,19 @@ struct ColumnUntyped {
 		this.cur = this.startRow;
 	}
 
-	@property bool empty() const pure nothrow @nogc @safe {
+	@property bool empty() const pure nothrow @nogc @safe scope {
 		return this.cur >= this.endRow;
 	}
 
-	void popFront() @safe {
+	void popFront() @safe scope {
 		++this.cur;
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc @safe {
+	inout(typeof(this)) save() inout pure nothrow @nogc @safe return scope {
 		return this;
 	}
 
-	@property Cell front() @safe {
+	@property Cell front() @safe scope {
 		return this.sheet.table[this.cur][this.col];
 	}
 }
@@ -331,22 +314,22 @@ struct Column(T) {
 		this.read();
 	}
 
-	@property bool empty() const pure nothrow @nogc {
+	@property bool empty() const pure nothrow @nogc scope {
 		return this.cu.empty;
 	}
 
-	void popFront() {
+	void popFront() scope {
 		this.cu.popFront();
 		if(!this.empty) {
 			this.read();
 		}
 	}
 
-	inout(typeof(this)) save() inout pure nothrow @nogc {
+	inout(typeof(this)) save() inout pure nothrow @nogc return scope {
 		return this;
 	}
 
-	private void read() {
+	private void read() scope {
 		this.front = convertTo!T(this.cu.front.xmlValue);
 	}
 }
@@ -880,7 +863,6 @@ string removeSpecialCharacter(string s) {
 
 	string replaceStrings(string s) {
 		import std.algorithm.searching : canFind;
-		import std.array : replace;
 		foreach(const tr; toRe) {
 			while(canFind(s, tr.from)) {
 				s = s.replace(tr.from, tr.to);
