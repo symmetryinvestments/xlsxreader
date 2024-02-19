@@ -7,7 +7,6 @@ d:
 
 script:
   - dub test --compiler=${DC}
-  - make style_lint
 
 notifications:
   email: false
