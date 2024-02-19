@@ -743,7 +743,7 @@ T convertTo(T)(Data var) {
 		return var.visit!(
 				(bool l) => Date.init,
 				(long l) => longToDate(l),
-				(double l) => longToDate(lround(l)),
+				(double l) => doubleToDateTime(l).date,
 				(string l) => stringToDate(l),
 				(DateTime l) => l.date,
 				(Date l) => l,
@@ -1312,4 +1312,11 @@ unittest {
 	auto a2 = sheet.cells.filter!(c => c.r == "A2");
 	assert(!a2.empty);
 	assert(a2.front.value == "0012", format("%s", a2.front.value));
+}
+
+unittest {
+	auto s = readSheet("sample-xlsx2.xlsx", "Sheet1");
+	auto rslt = s.iterateColumn!Date(0, 1, 7).array;
+	auto toEqual = [ Date(2024,1,15), Date(2024,1,15), Date(2024,1,15), Date(2024,1,15), Date(2024,1,15), Date(2024,1,15)];
+	assert(rslt == toEqual);
 }
