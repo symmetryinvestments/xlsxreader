@@ -521,10 +521,11 @@ T convertTo(T)(string var) @safe {
 		enforce(false, "Can not convert '" ~ var ~ "' to a DateTime");
 		assert(false, "Unreachable");
 	} else static if(is(T == Date)) {
-		if(var.canConvertToLong()) {
+		import std.math : lround;
+		if(var.canConvertToDouble()) {
+			return doubleToDateTime(to!double(var)).date;
+		} else if(var.canConvertToLong()) {
 			return longToDate(to!long(var));
-		} else if(var.canConvertToDouble()) {
-			return longToDate(lround(to!double(var)));
 		}
 		return stringToDate(var);
 	} else static if(is(T == TimeOfDay)) {
@@ -1144,4 +1145,12 @@ unittest {
 		];
 	assert(equal(rslt, target), format("\ngot: %s\nexp: %s\ntable %s", rslt
 				, target, s.toString()));
+}
+
+unittest {
+	auto s = readSheet("sample-xlsx2.xlsx", "Sheet1");
+	auto rslt = s.iterateColumn!Date(0, 1, 7).array;
+	auto toEqual = [ Date(2024,1,15), Date(2024,1,15), Date(2024,1,15), Date(2024,1,15), Date(2024,1,15), Date(2024,1,15)];
+	assert(rslt == toEqual
+			, format("\n%s\n%s", toEqual, rslt));
 }
