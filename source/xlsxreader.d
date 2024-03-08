@@ -581,9 +581,16 @@ SheetNameId[] sheetNames(in string filename) @trusted {
 		return [];
 	}
 	auto workbook = dom.children[0];
-	string sheetName = workbook.name == "workbook"
-		? "sheets" : "s:sheets";
-	if(workbook.name != "workbook" && workbook.name != "s:workbook") {
+	string sheetName = () {
+		switch(workbook.name) {
+			case "workbook": return "sheets";
+			case "x:workbook": return "x:sheets";
+			default: return "s:sheets";
+		}
+	}();
+	if(workbook.name != "workbook" && workbook.name != "s:workbook"
+			&& workbook.name != "x:workbook")
+	{
 		return [];
 	}
 	auto sheetsRng = workbook.children.filter!(c => c.name == sheetName);
@@ -626,11 +633,14 @@ Relationships[string] parseRelationships(ZipArchive za, ArchiveMember am) @trust
 	ubyte[] d = za.expand(am);
 	string relData = convertToString(d);
 	auto dom = parseDOM(relData);
-	assert(dom.children.length == 1);
+	enforce(dom.children.length == 1, format("Expected one dom.children got '%s'"
+				, dom.children().length));
 	auto rel = dom.children[0];
-	assert(rel.name == "Relationships");
+	enforce(rel.name == "Relationships"
+			, format("Expected rel.name 'Relationships' got '%s'"
+				, rel.name));
 	auto relRng = rel.children.filter!(c => c.name == "Relationship");
-	assert(!relRng.empty);
+	enforce(!relRng.empty, "Relationship must not be empty");
 
 	Relationships[string] ret;
 	foreach(r; relRng) {
@@ -708,13 +718,17 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 	if(dom.type != EntityType.elementStart) {
 		return ret;
 	}
-	assert(dom.children.length == 1);
+	enforce(dom.children.length == 1, format("Expected one dom.child got '%s'"
+				, dom.children().length));
 	auto sst = dom.children[0];
-	assert(sst.name == "sst");
+	enforce(sst.name == "sst" || sst.name == "x:sst"
+			, format("Expected name 'sst' or 'x:sst' got '%s'"
+				, sst.name));
 	if(sst.type != EntityType.elementStart || sst.children.empty) {
 		return ret;
 	}
-	auto siRng = sst.children.filter!(c => c.name == "si");
+	auto siRng = sst.children
+		.filter!(c => c.name == "si" || c.name == "x:si");
 	foreach(si; siRng) {
 		if(si.type != EntityType.elementStart) {
 			continue;
@@ -722,13 +736,14 @@ string[] readSharedEntries(ZipArchive za, ArchiveMember am) @trusted {
 		//ret ~= extractData(si);
 		string tmp;
 		foreach(tORr; si.children) {
-			if(tORr.name == "t" && tORr.type == EntityType.elementStart
+			if((tORr.name == "t" || tORr.name == "x:t")
+					&& tORr.type == EntityType.elementStart
 					&& !tORr.children.empty)
 			{
 				//ret ~= Data(convert(tORr.children[0].text));
 				ret ~= tORr.children[0].text.removeSpecialCharacter();
-			} else if(tORr.name == "r") {
-				foreach(r; tORr.children.filter!(r => r.name == "t")) {
+			} else if(tORr.name == "r" || tORr.name == "x:r") {
+				foreach(r; tORr.children.filter!(r => r.name == "t" || r.name == "x:t")) {
 					if(r.type == EntityType.elementStart && !r.children.empty) {
 						tmp ~= r.children[0].text.removeSpecialCharacter();
 					}
@@ -768,6 +783,7 @@ string extractData(DOMEntity!string si) {
 	if(!tmp.empty) {
 		return tmp;
 	}
+	enforce(!tmp.empty, "extractData return must not be empty");
 	assert(false);
 }
 
@@ -880,24 +896,28 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 	ubyte[] ss = za.expand(am);
 	string ssData = convertToString(ss);
 	auto dom = parseDOM(ssData);
-	assert(dom.children.length == 1);
+	enforce(dom.children.length == 1, format("Expected one dom.child got '%s'"
+				, dom.children().length));
 	auto ws = dom.children[0];
-	if(ws.name != "worksheet") {
+	if(ws.name != "worksheet" && ws.name != "x:worksheet") {
 		return ret;
 	}
-	auto sdRng = ws.children.filter!(c => c.name == "sheetData");
-	assert(!sdRng.empty);
+	auto sdRng = ws.children
+		.filter!(c => c.name == "sheetData" || c.name == "x:sheetData");
+	enforce(!sdRng.empty, "sheetData must not be empty");
 	if(sdRng.front.type != EntityType.elementStart) {
 		return ret;
 	}
 	auto rows = sdRng.front.children
-		.filter!(r => r.name == "row");
+		.filter!(r => r.name == "row" || r.name == "x:row");
 
 	foreach(ref row; rows) {
 		if(row.type != EntityType.elementStart || row.children.empty) {
 			continue;
 		}
-		foreach(ref c; row.children.filter!(r => r.name == "c")) {
+		foreach(ref c; row.children
+				.filter!(r => r.name == "c" || r.name == "x:c"))
+		{
 			Cell tmp;
 			tmp.row = row.attributes.filter!(a => a.name == "r")
 				.front.value.to!size_t();
@@ -912,7 +932,8 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 			}
 			if(tmp.t == "s" || tmp.t == "n") {
 				if(c.type == EntityType.elementStart) {
-					auto v = c.children.filter!(c => c.name == "v");
+					auto v = c.children
+						.filter!(c => c.name == "v" || c.name == "x:v");
 					//enforce(!v.empty, format("r %s", tmp.row));
 					if(!v.empty && v.front.type == EntityType.elementStart
 							&& !v.front.children.empty)
@@ -926,7 +947,8 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 				auto is_ = c.children.filter!(c => c.name == "is");
 				tmp.v = extractData(is_.front);
 			} else if(c.type == EntityType.elementStart) {
-				auto v = c.children.filter!(c => c.name == "v");
+				auto v = c.children
+					.filter!(c => c.name == "v" || c.name == "x:v");
 				if(!v.empty && v.front.type == EntityType.elementStart
 						&& !v.front.children.empty)
 				{
@@ -934,7 +956,8 @@ Cell[] readCells(ZipArchive za, ArchiveMember am) @trusted {
 				}
 			}
 			if(c.type == EntityType.elementStart) {
-				auto f = c.children.filter!(c => c.name == "f");
+				auto f = c.children
+					.filter!(c => c.name == "f" || c.name == "x:f");
 				if(!f.empty && f.front.type == EntityType.elementStart) {
 					tmp.f = f.front.children[0].text;
 				}
@@ -949,7 +972,7 @@ Cell[] insertValueIntoCell(Cell[] cells, string[] ss) @trusted {
 	immutable excepted = ["n", "s", "b", "e", "str", "inlineStr"];
 	immutable same = ["n", "e", "str", "inlineStr"];
 	foreach(ref Cell c; cells) {
-		assert(canFind(excepted, c.t) || c.t.empty,
+		enforce(canFind(excepted, c.t) || c.t.empty,
 				format("'%s' not in [%s]", c.t, excepted));
 		if(c.t.empty) {
 			//c.xmlValue = convert(c.v);
